@@ -29,8 +29,16 @@ This README documents how to install the patch to your copy of FAoD, as well as 
 1. [Why The Patch Was Created](#why)
     1. [Background](#background)
     1. [On "Fixing" the game](#fixing)
-1. [The Things that were Changed](#them_changes)
-    1. [Things Not Changed](#not_changed)
+1. [What Was Changed](#them_changes)
+    1. [What Was Not Changed](#not_changed)
+    1. [Changes to Dizzy](#dizzy_changes)
+    1. [Changes to Enemies](#enemy_changes)
+    1. [Environmental Changes](#envt_changes)
+    1. [Bug Fixes](#bug_fixes)
+1. [How It Was Changed](#how_changes)
+    1. [How Dizzy Was Changed](#how_dizzy)
+    1. [How Enemies Were Changed](#how_enemies)
+1. [Conclusion](#conclusion)
 
 ## **Installation**  <a id="installation"></a>
 To install the patch, follow these steps:
@@ -67,7 +75,7 @@ As mentioned, the vanilla version of game is nearly unbeatable. Dizzy takes an a
  It's laughable to think of just how much the game is stacked against you. Among imprecise platforming, trial-and-error obstacles, and enemy movement that requires saint-like patience, know that this is all it takes:
 
 <p align="center">
-  <img src="images/spider_normal.gif" alt="Egg getting destroyed"/><br/>
+  <img src="images/spider_normal.gif" style="width:342px" alt="Egg getting destroyed"/><br/>
   Literally 2 seconds.
 </p>
 
@@ -82,11 +90,11 @@ Unlike my Fair Edition patch for [Journey to Silius](https://github.com/schil227
 
 ... I'm getting off topic. The point is, in this adventure-puzzle-platformer which takes hours to beat, that you could suddenly lose at very swiftly, I felt much more justified in making some changes. And despite my grievances with how some things were handled, I really do think this is a magical game worth the time and effort to "fix". Again, the patch does not aim to trivialize the challenge, but rather to keep the the game as close as possible to its original vision. When the player beats the patch, they should feel like they really completed a tough but (mostly) fair NES game.
 
-## The Things that were Changed <a id="them_changes"></a>
+## What Was Changed <a id="them_changes"></a>
 
 This section will contain an extravaganza of all the many changes that were done as a part of this patch. The details of these changes will stick to game-play and design, and the nitty-gritty coding details will be in the technical section. While the changes for this patch were numerous, it's also worth discussing what *wasn't* changed.
 
-### Things Not Changed <a id="not_changed"></a>
+### What Was Not Changed <a id="not_changed"></a>
 
 **Continues: No additional continues**
 
@@ -99,7 +107,7 @@ Furthermore, there really isn't a straight-forward way to implement continues th
  For what is probably the easiest way to game-over in this game, a small part of me actually enjoys the Minecart Minigame. It really adds a fast-paced splash of variety to the game which (once you 'git gud' at) is pretty great. Even though I had to play through this game like 4 times to test out this patch, every time I beat the minecart section, I felt that lovely dopamine kick.
 
 <p align="center">
-  <img src="images/fair_minecart.gif" alt="Minecart clip"/><br/>
+  <img src="images/fair_minecart.gif" style="width:342px" alt="Minecart clip"/><br/>
   <i>White knuckle baby, YEAH!</i>
 </p>
 
@@ -115,7 +123,7 @@ Anyways - I guess when I play this minecart mini-game, I feel *just a little* li
 
 **The Clouds**:
 <p align="center">
-  <img src="images/FAoDizzyFair-Clouds.png" alt="Minecart clip"/><br/>
+  <img src="images/FAoDizzyFair-Clouds.png" style="width:342px" alt="Minecart clip"/><br/>
   His face says it all.
 </p>
 
@@ -127,7 +135,7 @@ All that being said, I could have easily changed it. I could have made Dizzy sin
 
  Without spoiling the ending any further, it would be disingenuous of me to alter any part of the final encounter. That last area is pure FAoD.
 
-### Changes to Dizzy
+### Changes to Dizzy  <a id="dizzy_changes"></a>
 These are the changes that were made to Dizzy directly
 
 **Starting Lives: Dizzy starts with one extra life**
@@ -140,7 +148,7 @@ These are the changes that were made to Dizzy directly
 
 The solution was to double the i-frames Dizzy receives after getting hit. This was done in conjunction with reducing the damage from many different sources. These two changes alone made for a much more enjoyable experience; as opposed to the ultra-aggressive-two-seconds-until-you-are-dead experience.
 
-### Changes to Enemies
+### Changes to Enemies <a id="enemy_changes"></a>
 **Spiders: Reduced damage and removed switchbacks**
 
 | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
@@ -198,11 +206,11 @@ These sources include:
   * **Ants**: To be fair, they're quite large. Their damage was reduced from 20 to 7. 
 
 <p align="center">
-  <img src="images/FAoDizzy_Tri.png" alt="Triceratops "/><br/>
+  <img src="images/FAoDizzy_Tri.png" style="width:342px" alt="Triceratops"/><br/>
   Strange looking dog.
 </p>
 
-### Environmental Changes
+### Environmental Changes <a id="envt_changes"></a>
 
 Outside of Dizzy and the things which wish him harm, there were several more subtle changes that were introduced as well. These include:
 
@@ -234,6 +242,149 @@ At the very end of the game, one of the last items you get is a trampoline - and
 
  I actually lost a life at that part, and I just couldn't stand the thought of someone getting game over there, after overcoming all the trials of the game. I resisted the urge to just remove enemies and hazards for the entire game, but this raindrop was a bridge too far.
 
- ### Bug Fixes
+ ### Bug Fixes <a id="bug_fixes"></a>
 
- There are a few 
+ In addition to enhancements, the patch also features some bug-fixes.
+
+ **Invincibility Glitch: Removed**
+ | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
+|---|---|
+| <img src="images/base_invincibility_bug.gif" style="width:342px" /><br/>|<img src="images/fair_invincibility_bug_fix.gif" style="width:342px" /> |
+| <p style="text-align: center;"> The glitch makes Dizzy invulnerable to some enemies</p> | <p style="text-align: center;"> The glitch no longer works</p>|
+
+If you made any meaningful progress in this game, it was likely due to this glitch. It works by screwing up Dizzy's i-frame counter, by pausing while healing. The result is Dizzy no longer takes any damage from certain enemies, such as the spiders, ants, and mice. Since the patch evens out a lot of the unfair damage, it's only fair to remove the invincibility glitch. 
+
+**Last Star Glitch: Fixed**
+ | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
+|---|---|
+| <img src="images/base_star_bug.gif" style="width:342px" /><br/>|<img src="images/fair_star_bug_fix.gif" style="width:342px" /> |
+| <p style="text-align: center;"> After collecting the last star, it can be collected again</p> | <p style="text-align: center;"> The last star is properly cleared </p>|
+
+This bug is especially heinous, and I would rank this bug-fix up there with fixing the spider movement. During the game, Dizzy has to collect 100 stars - a particularly daunting task. When all the stars are collected, the barrier to Zak's chamber, and the final area, is open. 
+
+However, sometimes the very final star you collect doesn't go away, even after the brief cut-scene explains the barrier is open. Many players may assume that they need to collect the star again, that the cut-scene played prematurely. However, if you collect that star again, the game becomes soft-locked - *at the very end of the game*. 
+
+Without getting into the technical details, the thing that decides whether the star gate is active or not is equal to the number of stars Dizzy has collected. When Dizzy collects one too many stars, the count is no longer equal to zero, and the star gate is now up forever. Imagine my surprise when this happened to me on one of my test playthroughs.
+
+<p align="center">
+  <img src="images/FAoDizzy_Fair-Missing_One_Star.bmp" alt="Triceratops "/><br/>
+  (screams internally)
+</p>
+
+**Object loading: reordered priority of items**
+ | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
+|---|---|
+| <img src="images/base_item_spawning.gif" style="width:342px" /><br/>|<img src="images/fair_item_spawning.gif" style="width:342px" /> |
+| <p style="text-align: center;"> More important items get de-spawned </p> | <p style="text-align: center;"> Less important items get de-spawned </p>|
+
+This one is a weird one, so I'll try to explain simply. When there's too many items (objects) in an area (e.g Keys, Chicken, Plank, etc.) the NES has a hard time rendering them all. Since Dizzy can technically drop lots of items in one area, the game only shows the first X items when it reloads an area. 
+
+The problem with this is that some items are loaded with a higher priority; except that these items cannot be accessed before other items of a lesser priority. For example, the Star Plant object has a higher priority than the Plank object, but it cannot be accessed until the Plank is used to cross a gap. As a result, the important Plank object doesn't get loaded, but the Star Plant (which isn't even on screen) gets loaded instead.
+
+This fix changes the priority of the objects in the starting area, such that important objects (e.g. Plank, Ground Elevator Key) have a higher priority over other Objects (e.g. Denzil's Elevator Key, Star Plant). The result is players won't be confused by items that suddenly go missing.
+1
+## How It Was Changed <a id="how_changes"></a>
+
+This section contains the technical details of what was changed. I wont go over the process of sleuthing through the code to figure out how it works and where to make the change (which was 90% of the work), but I will provide details and assembly code. If this part isn't of any interest to you, feel free to skip to the conclusion.
+
+### How Dizzy Was Changed <a id="how_dizzy"></a>
+<br>
+
+**Additional Starting Life**
+
+This was one of the easier changes (perhaps an exercise to the ambitious reader). Dizzy's life count is stored in address `$9A`. He starts with 3 lives, which are hard coded at address `$000021`:
+
+ * `LDA #02`: Load the number 2 into the accumulator register
+ * `STA $9A`: Store the value of the register into address `$9A`
+
+*Note Dizzy's life count includes all numbers greater or equal to zero. So in this case, loading `#02` produces 3 values: [0, 1, 2] - hence, three lives.
+
+The change is simple enough; load `#03` into the register and he starts with 4 lives.
+
+**Doubling Invincibility Frames**
+
+This is where things get a little more interesting. After getting hit by an enemy, Dizzy is temporarily invulnerable for several frames (i-frames). There are two addresses which are relevant to Dizzy's health and i-frames: `$F2` and `$F3`.
+  * `$F2` keeps track of Dizzy's actual health. When Dizzy gets hit by an enemy, the damage is immediately added to this.
+    * For example, if Dizzy already had 10 damage done to him, and then another 5, `$F2` would immediately go from 10 to 15 (assuming no i-frames).
+  * `$F3` ticks up (or down, if healing) to the value of `$F2`. When a damage source checks for i-frames, what it's doing is comparing `$F2` with `$F3`. If they're equal, then Dizzy receives damage. Otherwise, Dizzy is temporarily invulnerable.
+    * For example, the frame after Dizzy gets hit by an enemy, `$F2` jumps from 10 to 15. He's still touching the enemy, but `$F3` has only incremented once from 10 to 11. Therefore, he is invulnerable this frame.
+
+If there is a difference between `$F2` and `$F3`, the value in `$F3` will tick up (or down) every frame. By making it so the value changes every two frames (especially when getting hurt), Dizzy will have a longer invulnerability period. 
+
+The way this was accomplished was as follows: The code to increment the value in `$F3` was traded with a `JMP` call to go to a function. This function would keep track of a separate address in memory (`$1FFF`) which would keep track of the 'sub-count' to determine if it was a frame to increment `$F3`. If the 'sub-count' was less than 2, increment the 'sub-count' and move on. Otherwise, increment `$F3` and set the 'sub-count' to zero. 
+
+This is what the function looks like:
+
+
+<p align="center">
+  <img src="images/i-frame_function.png" alt="i-frame function"/>
+</p>
+
+
+* `INC $1FFF`: Increment the frame sub-count 
+* `LDA $1FFF`: Load the sub-count into memory
+* `CMP #$02`: compare the sub-count to the number 2
+* `BCC $FEE1`: if the count is less than 2, jump to (**)
+* `INC $F3`: else, increment `$F3`
+* `LDA #00`: Load the number 0 into the sub-count
+* `STA $1FFF`: Set the sub-count back to zero
+* `LDA #08`: (**) (this code had to be moved here, since the call to jump to this method required more bytes than available. It's not relevant to i-frames.)		
+* `STA $B8`: (same as above)		
+* `JMP $F27D`: Return from this function.
+
+And here's where the function gets called ad `$03F287`:
+  * `JMP $FED0`: Jump to function
+
+The result is as expected; the `$F3` register gets incremented every other frame, thus doubling Dizzy's i-frames.
+
+### How Enemies Were Changed <a id="how_enemies"></a>
+How enemy movement and damage was changed is mostly the same for all of them, so I'll only give a few examples.
+
+**Reducing Damage**
+
+This is also a very easy change, if you know how to use the emulator. Since we know Dizzy's health is tied to `$F2`, by simply adding a breakpoint in the debugger, we can force the game to halt whenever that value gets changed. Once Dizzy walks into an enemy, sure enough the game will pause and point to where `$F2` is getting changed.
+
+The goal is to figure out what *value* got loaded *where* to do the damage done to Dizzy. For example, if the line is `STA $F2` (a.k.a. **ST**ore **A**ccumulator), then we know that we should be looking for loads in the accumulator. It can be tricky to figure out just how we got to that line in the debugger, but by looking at the trace logger, this is made trivial:
+
+<p align="center">
+  <img src="images/enemy_damage_trace.png" alt="Dizzy damage trace"/>
+  Left: Dizzy taking damage from a spider. Right: The trace log of the code that was executed. 
+</p>
+
+Using the image above, we can go through the instructions that were executed to get to this breakpoint. The instructions are printed sequentially, so starting from the bottom we see the call to store the Accumulator into `$F2`. Looking up the logs we see another call to change the Accumulator: `ADC $F2` (**AD**d with **C**arry). This call makes sense; add the current value of `$F2` to what already exists in the accumulator. Following up the chain of execution, we arrive at `LDA #07`: Load 7 into the accumulator! This is the damage Dizzy sustained from the spider, and we've found the location where it's getting called (`$92AD`, or `$0052BD` with offsets).
+
+This example was using the patched version of the game; the original value is `#14` - that's 0x14 *not* 14 decimal (0x14 = 16 + 4 => 20 decimal). Full disclosure, I had intended to half the damage from the spiders, but since I spaced and didn't perform the proper conversion, the damage received is about 1/3rd. It's also worth noting that this damage value in the code is shared amongst other enemies, namely the ants and the (not sewer) rats.
+
+Anyways, by performing this operation among other damage sources, I was able to track and change a few of them accordingly.
+
+**Removing Switchbacks**
+
+As mentioned previously, a 'switchback' is the term I use for when an enemy changes direction mid-way through their trajectory - introducing randomness in their movement patterns. Removing the switchbacks makes enemy movement much more predictable, and therefore the game-play less frustrating.
+
+Spiders and Guillotines, as well as the birds/bats and sewer rats implement some similar form of switchback. I will go into detail about how the spider switchback was disabled.
+
+There are two values that the spider needs to keep track of: its height, and current state. While there may be several spiders loaded at a time, they get processed one by one, and their values are temporarily stored in `$2B` (height) and `$2C` (state). The height is less applicable to the change, so we'll focus on the state. The state of the spider can be one of three values:
+ * `#00`: Not moving
+ * `#01`: Descending
+ * `#FF`: Ascending  
+
+ The spider follows these rules: If the spider reaches the top or bottom, it stops moving (`#00`). If it is ascending (`#FF`), it can switch direction and descend (`#01`). It cannot switch direction and ascending (`#FF`) while it is descending (`#01`), it can only ascend it if it's not moving (`00`).
+
+<p align="center">
+  <img src="images/spider_state_chart.png" alt="Spider state flowchart"/> </br>
+  Flowchart of the spider's state.
+</p>
+ 
+ To summarize, the goal is to remove the red arrow in the flowchart above that lets the spider switch state while moving upwards.
+
+ The random number generation in FAoD appears to have a few sources, but one common one is the frame counter that exists at `$47`. Every frame this address counts up one, and once it reaches the maximum value (`#FF`) it resets back to zero. When the spider is in the state `$FF`, it loads the counter (instruction at `$9234`) and does and `AND #01` instruction, which has a %50 chance of being true (meaning the counter byte has a 1 in the right most bit: `0000 0001`). If it is true, then further RNG calculations are performed and a value is stored in the accumulator. If that value happens to be less than #03, then at line `$9241` it jumps to `$922C`, which sets the state to `#01`. This instruction to jump is the "red path" that needs to be removed.
+
+
+ | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
+|---|---|
+| <img src="images/spider_mvmt_function.png" style="width:342px" /><br/>|<img src="images/spider_mvmt_function_fix.png" style="width:342px" /> |
+| <p style="text-align: center;"> Jumps to sub routine `$922C` </p> | <p style="text-align: center;"> Removes jump to sub routine `$922C` </p>|
+ 
+Once the code is understood, the solution is fairly simple. There are different ways of avoiding the sub routine call, such as making it so the branch that typically skips over it always be taken (e.g. changing `CMP #03` to `CMP #00`). However I just went ahead and replaced the `JMP $922C` command with `NOP` (**N**o **OP**eration). Note that a jump instruction is 3 bytes long `4C 2C 92`, so those bytes were overwritten as 3 seperate `NOP` instructions (`EA`).
+
+And that's all it takes to fix, what is in my opinion, one of the worst things about the game.
