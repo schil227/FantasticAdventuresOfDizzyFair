@@ -38,6 +38,7 @@ This README documents how to install the patch to your copy of FAoD, as well as 
 1. [How It Was Changed](#how_changes)
     1. [How Dizzy Was Changed](#how_dizzy)
     1. [How Enemies Were Changed](#how_enemies)
+    1. [How The Environment Was Changed](#how_environment)
 1. [Conclusion](#conclusion)
 
 ## **Installation**  <a id="installation"></a>
@@ -388,3 +389,96 @@ There are two values that the spider needs to keep track of: its height, and cur
 Once the code is understood, the solution is fairly simple. There are different ways of avoiding the sub routine call, such as making it so the branch that typically skips over it always be taken (e.g. changing `CMP #03` to `CMP #00`). However I just went ahead and replaced the `JMP $922C` command with `NOP` (**N**o **OP**eration). Note that a jump instruction is 3 bytes long `4C 2C 92`, so those bytes were overwritten as 3 seperate `NOP` instructions (`EA`).
 
 And that's all it takes to fix, what is in my opinion, one of the worst things about the game.
+
+The logic controlling the Guillotine is practically identical, and the solution is the same. Birds, bats, and the sewer rats are slightly different, as they can move in 8 directions at different speeds. Without going into too much detail, they change direction if one of two conditions are met:
+ 1. They hit the border of their allowed area of movement (a "wall")
+ 1. RNG dictates they should change direction
+
+ The first case makes sense; if they bump into the ceiling/ground, or they go as far as they're allowed to on the left or right, they should randomly change direction. The second option is the one we would want to disable. It's similar in format; using the counter (`$47`), if it meets some condition then it uses further RNG to determine which direction and at what speed to move. By disabling the jump which change its velocity, we can eliminate the second condition. The result is, this type of enemy only changes direction when they hit a wall
+
+ ### How The Environment Was Changed <a id="how_environment"></a> 
+ In addition to changing Dizzy and Enemies, parts of the world were (slightly) changed.
+
+ **Adding Frames To The Waterfall Barrel**
+ <p align="center">
+  <img src="images/fair_barrel.gif" alt="Waterfall Barrel"/> </br>
+  This Barrel, specifically.
+</p>
+
+This has always been a particularly difficult jump, one which I thought could benefit from a little leeway. This was one of the more interesting changes, due to how the mechanism works. Basically, the barrel has several states - these states are when: 
+  1. The barrel appears in the background
+  1. The barrel is falling in the background
+  1. The barrel is not shown (approaching the foreground)
+  1. The barrel is "hovering", and can be jumped on (this goes on for two more states)
+  1. The barrel descends in the foreground
+
+  All these states are driven by a counter located at `$050E`. The counter ticks up every frame, and a `LSR` (**L**ogical **S**hift **R**ight)is performed, which halves the value. The result from that, referred to as state_counter, is used to drive the state. The reason why the `$050E` counter is halved is because it causes the state_counter to sustain for two frames; e.g. (`LSR #82` => `#41`, `LSR #83` => `#41`, `LSR #84` => `#42`, `LSR #85` => `#42`, etc.). Doing it this way will save data (which we'll get to in a second).
+
+ | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
+|---|---|
+| <img src="images/base_barrel_state.png" /><br/>|<img src="images/fair_barrel_state.png"  /> |
+| <p style="text-align: center;"> Barrel state in the base game. </p> | <p style="text-align: center;"> Barrel state in the fair version. </p>|
+
+Above is the code which determines the state of the barrel. Without going line by line, this is the gist of what's happening: 
+  * The counter `$050E` is incremented and loaded into the accumulator. A `LSR` operation is performed on it. The accumulator now holds the state_counter.
+  * The value `#6A` is stored in the X register.
+  * The state_counter is compared against the value `#08` (at `$BBAA`). If the accumulator is less than `#08`, it sets the data to make the barrel appear at the top of the falls in the background. Otherwise it loads `#68` into the X register and continues.
+  * state_counter is then compared against the number `#30` (at `$BBB0`). If the state counter is less than `#30`, then the barrel begins descending the falls in the background.
+  * If the state_counter is greater than `#30` but less than `#48` (changed to `#40` in the Fair Edition), then the barrel disappears in the background (`$BBB4`).
+  * After this the format of the code changes a little, but in essence it's the same. A check is made to see if state_counter is greater than `#6C` (at `$BBBA`), then if its less than `#54` (`$BBC0`), and then if it's less than `#60`.
+    * All the state values between `#48` (`#40` Fair Version) and `#6C` have the barrel at the top of the falls, ready to be jumped on. After `#6C` the barrel drops down the falls.
+
+  As outlined, the solution is rather straightforward; when the state_counter is between `#30` and `#48`, the barrel is gone, and then the next chunk from `#48` to `#6C` is the target state that we want to "elongate". By shortening the `#30` to `#48` range to `#30` to `#40`, we then extend the range of time when the barrel is ready to be jumped on to `#40` to `#6C`. It may not seem like much, but again each count of the state_counter is worth two frames; thus 16 frames are gained for Dizzy to jump onto the barrel; over half a second!
+
+  The other thing to bring up is that there is a table of values which correspond to barrel height. For every tick of the state_counter, there exists a vertical value that represents where the barrel should be. This is underlined in the tables below:
+
+ | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
+|---|---|
+| <img src="images/base_barrel_frames.png"  /><br/>|<img src="images/fair_barrel_frames.png" /> |
+| <p style="text-align: center;"> Barrel height values in the base game. </p> | <p style="text-align: center;"> Barrel height values in the fair version. </p>|
+  
+In the portion underlined in red represents the `#30` to `#48` state (before the barrel shows up). Why is the height value `#10` in this case, I'm not sure. The blue line represents (part) of the `#48` (`#40`) to `#6C` range. As is illustrated, since the threshold was bumped down from `#48` to `#40`, the table of heights needed to be updated to account for the extended length. This in part is my theory as why state_counter was used instead of the raw value from `$050E`: it saves space since two frames are represented in one byte of data on the table.
+
+As a result of the two changes above, the barrel shows up sooner (and at the correct height), thus giving Dizzy more time to cross the waterfall.
+
+**Increasing Oxygen For Bubble Mini-game**
+
+This change was fairly simple. Dizzy's oxygen meter starts at a high number and ticks down over time. The current value of the oxygen is stored at `$9E`. The code responsible for deciding to decrement that value is located around `$8395` (`$028395` with offsets):
+
+ | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
+|---|---|
+| <img src="images/base_oxygen.png"  /><br/>|<img src="images/fair_oxygen.png" /> |
+| <p style="text-align: center;"> Code for reducing oxygen. </p> | <p style="text-align: center;"> Code for reducing oxygent in the fair version. </p>|
+
+The counter `$47` is used as a timer source, and an `AND #3F` is performed against it (`0011 1111`), so the result has a range between `#00` and `#3F`. The Base version has three checks for this value (almost) evenly spread out in-between. if the value is `#3F` (`$8397`), if the value is equal to `#28` (`$839B`), or if the value is equal to `#14` (`$839F`), then the code executes line `$83A3`: `DEC $9E` (**DEC**rement `$9E`). So basically, on a given value of the timer, `$9E` has three chances to be decremented.
+
+The fix is as simple as reducing the number of chances. In the modified Fair Version of the game, there are only two checks; the inital one to see if the value is equal to `#3F`, and a second one that occurs at `$1F` (half of `#3F`). The other chance is simply `NOP`'d away. 
+
+The result is: for a given value of the counter, it only has two chances instead of three - meaning in the Fair Version the value decreases at a rate 2/3rds of the original.
+
+**Removing The Tedious Raindrop**
+For such a simple change, this one took quite a while to figure out. There are tons of raindrops in this particular area, so isolating which values corresponded to which raindrop was a bit tedious. Once I was able to figure out part of it (my notes say that it's current height was stored at `$04EA` in RAM), I was able to trace back to where that value was initially loaded from in ROM (**R**ead **O**nly **M**emory). The ROM data contained all the hardcoded values for each of raindrops; e.g. their start and end location, how frequently they should drop, etc. In memory, it looked like this:
+
+`... 64 90 01 14 6E 64 D1 01 08 82 64 FE 01 08 56 32 68 01 ...`
+
+Which, if we add a few line breaks to, looks like this:
+
+`... 64` <br>
+`90 01 14 6E 64` (Raindrop to the left) <br>
+`D1 01 08 82 64` (The tedious raindrop) <br>
+`FE 01 08 56 32` (Raindrop to the right) <br>
+`68 01 ...`<br>
+
+So to decode some of these values (using the tedious raindrop):
+
+`D1` X-Offset: The horizontal X-offset of the raindrop, used in conjunction with the Area Id<br> 
+`01` Area Id: Which area (room) to spawn the raindrop. In the cave, there are 2 rooms (so `#00` and `#01`) <br> 
+`08` Start Height: The starting height of the drop. <br>
+`82` End Height: The end height of the drop. <br>
+`64` Frequency: The frequency of how often the drop should spawn (by comparison, the raindrop to the right has a shorter frequency (`#32`) since it has a shorter fall length)
+
+With the values decoded, the fix was nice and hacky: I changed the Start Height from `#08` to `#FE` (the bottom of the screen), and made the End Height `#08`. By making the Start Height below the End Height, as soon as the raindrop spawns it immediately goes away. Since it still spawns, moving it to the very bottom (`#FE`) pushes it out of view so it can't be seen. Thus, the raindrop is removed.
+
+Ta-da.
+
+### How Bugs Were Fixed
