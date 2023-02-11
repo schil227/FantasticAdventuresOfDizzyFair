@@ -39,6 +39,7 @@ This README documents how to install the patch to your copy of FAoD, as well as 
     1. [How Dizzy Was Changed](#how_dizzy)
     1. [How Enemies Were Changed](#how_enemies)
     1. [How The Environment Was Changed](#how_environment)
+    1. [How Bugs Were Fixed](#how_bugs)
 1. [Conclusion](#conclusion)
 
 ## **Installation**  <a id="installation"></a>
@@ -481,4 +482,124 @@ With the values decoded, the fix was nice and hacky: I changed the Start Height 
 
 Ta-da.
 
-### How Bugs Were Fixed
+### How Bugs Were Fixed <a id="how_bugs"></a> 
+
+While play-testing the patch, I encountered a few bugs along the way. Some of which I didn't fix.
+
+ <p align="center">
+  <img src="images/guard_glitch.gif" alt="guard glitch"/> </br>
+  Like this one.
+</p>
+
+However, there were a few that I felt inspired to fix.
+
+**Removing Invincibility Bug**
+
+Since beating the game originally all but relied on using this glitch, a good measure of this patch would be to remove it completely.
+
+In the Increasing I-Frames section, we already discussed `$F2` (Dizzy's Heath) and `$F3` (A counter which slowly goes to whatever's in `$F2`). Now we introduce `$F4`: `$F4` is a timer which governs how long `$F3` will tick up or down for, while simultaneously getting used to display the Damage meter. Typically `$F4` has more than enough time for `$F3` to adjust to `$F2`'s value; however if `$F4` reaches zero before this happens, then `$F3` will not equal `$F2`. If `$F3` and `$F2` are not equal, the game thinks that Dizzy has i-frames, and he will not take damage from several types of enemies, such as the spiders, ants, rats.
+
+So what causes the value of `$F4` to not be enough time? There inlays the glitch. When the player presses select, another screen gets rendered, showing off Dizzy's inventory, item and area descriptions, etc. However to display that screen, the game needs to use many addresses in memory. This is roughly what it does:
+1. Stores the game state of things elsewhere in RAM
+2. Loads the select screen
+  * Stays here until the player leaves
+3. Loads the state from elsewhere in RAM
+  * Game state is loaded, continue
+
+One of the values it keeps track of is `$F4`, however something gets mixed up: at `$DF67` (`$03DF77`) during step **1** above, the value of `$F4` is set to zero. The value is not getting preserved. Curiously, during step **3**, the value of `$F4` is getting written to from `$93` - but it's always zero.
+
+I didn't look much further into it at this point, since I saw an opportunity to immediately fix the issue; I wrote a simple function that stored `$F4` way in the back of RAM at `$1FFE`. This function would get executed at step **1**. Then during step **3**, I had another function which would load `$1FFE` and stick it into `$F4`. This was enough to remove the bug.
+
+However, there's a little more to this bugfix: after I had implemented my solution, I noticed that `$93` was suddenly had the correct value! Why was this?
+
+Here is the original code of the bug:
+
+ <p align="center">
+  <img src="images/invincibility_glitch_code.png" alt="invincibility glitch code"/> </br>
+</p>
+
+I had changed line `$03DF77` (a.k.a. `$DF67`) from `STA $00F4` to a `JMP` call to my new function; which meant that `$00F4` (a.k.a. `$F4`) was no longer getting set to `#00` from the accumulator. Not long after this code gets called, a different function gets invoked: this one stores the value of `$F4` into `$93`! So really, all I had to do was remove that erroneous assigment of `#00` to `$F4`. However after already making my change, I didn't feel like undoing it, so decided to say "eh" and left it in there. 
+
+It's strange that they used the long form of storage (`8D F4 00` => `STA $00F4`) instead of the more concise version (`85 F4` => `STA $F4`); this was at a time where space really mattered, and was relatively limited. Even I, a novice assembly programmer, know it's better to use the short form. I'm not one to speculate, but it sure is fun: here are some of my theories as to why this ended up the way it did:
+  1. The intern wrote this piece of code, and the bug it produced was obscure enough that nobody caught it
+  1. Perhaps it was a late code change, so having 95% of the game finished, they needed to make a quick and dirty fix to resolve some bug (but ended up producing another)
+  1. (The hottest take) the game was too difficult, so they introduced this obscure glitch to make testing it easier
+
+All options considered, it's probably the first case.
+
+Anyway with this bug fixed, Dizzy now remains the fragile, pathetic egg he is. Der HerrGott gibt, der HerrGott nimmt.
+
+**Fixing The Star Bug**
+
+Of all the bug fixes I think this one is most important, as it could easily soft-lock your game at the very, very end.
+
+As it turns out, this bug is relatively similar to the previous. When Dizzy collects the 100th star, a new screen is loaded explaining that the star gate is down and Dizzy can now enter Zak's tower. When it does this, it stores game-state values in RAM, displays the screen, then loads those values back. After this cut-scene, *sometimes* the star would still be there, ready to be collected.
+
+Now the star gate is up when the value is *not* zero, as opposed to just greater than zero. So if Dizzy collects that star again, the value rolls over from `#00` to `#FF`, and the star gate is up permanently. My first fix was address this problem:
+
+ <p align="center">
+  <img src="images/star_gate_guard.png" alt="star gate guard-clause code"/> </br>
+</p>
+
+The address `$0742` contains the number of stars that need to be collected. Whenever Dizzy collects a star, the value of that address decreases by one. Since there was no guard clause to check for zero first, the value always decremented, hence the issue. The code above now first checks if `$0742` is already zero - if it is, it skips the `DEC $0742` instruction, keeping the value at zero, and the star gate open.
+
+The above fix works, but it would be much nicer if the star didn't appear at all. I went on to fix the root of the issue:
+
+ After a lot of debugging, I had determined the source as to why the star was getting displayed. Address `$23` stores an Area Identifier - this value is used when loading certain assets, such as the stars. While testing the bug, going into the cut-scene `$23` had a value of `#14`. After the cut-scene, `$23` was `#F1`. Since the Area Identifier was wrong, it was loading the wrong data to determine if the star is displayed or not. Clearly the issue is the value of `$23` is not getting persisted correctly.
+
+ `$23` is sourced from `$0743` (not to be confused with the remaining star counter, `$0742`). The solution was simply to load the value from `$0743` into `$23` after the cut-scene ends. Thus, the correct Area Id was loaded, so the star was no longer displayed.
+
+**Fixing The Object Loading Order**
+
+This was a rather obtuse bug that I found on my penultimate play-through. Basically for a given area (e.g. the YolkFolk Forrest Floor) there are several "rooms" connected horizontally. Amongst all these rooms, there is a limited number of "slots" to store objects (objects in this case being the white items he can pick up, not including stars or fruit). If Dizzy brings in objects from a different area and drops them on the ground, they are rendered as sitting on the ground. However, if too many objects are dropped in a given area, on *some* of those objects will disappear.
+
+The scenario which I encountered was I had dropped the Plank and Denzil's Elevator Key (two items near Dizzy's house in a different area) on the ground by the Chicken. When I left and came back, the Plank was inexplicably gone. This is what was happening behind the scenes:
+1. I reloaded the area by exiting and re-entering
+1. The game iterated over all the objects in the game. 
+    * If the Object's Area Id matched the current Area Id, it was emplaced in a slot
+    * Howevever, if there are no slots left, it (effectively) stops iterating.
+1. The area is rendered, and the objects not loaded into slots are not displayed (or intractable)
+
+ What dictates if an object appears or not on area reload is the order in which objects are stored in ROM. Objects are stored one after the other in ROM, and do not appear to have any particular order. Here's an example of the Plank object in memory ( from `$03F952`):
+
+ `0E F4 01 A8 5E A5 1D F4 83 00`
+
+The meaning behind the values are as follows:
+
+  `0E`: The initial Area Id <br>
+  `F4`: The initial X (horizontal) coordinate <br>
+  `01`: The sub-area Id (the "room") <br>
+  `A8`: The initial Y (vertical) coordinate <br>
+  `5C A5`: An address pointing to sprite data <br>
+  `1D`: An Id for what the object interacts with e.g. (Elevator, Pit, etc.) <br>
+  `F4 83`: An address pointing to the item description <br>
+  `00`: A sub-id for interaction (e.g. if the main interaction Id was Elevator, this would indicate *which* specific elevator) <br>
+  
+For comparison, here's the Star Plant in memory (`$03F736`):
+
+`0F 2F 08 9E 63 8B 02 C8 82 03`
+
+Here is the raw data from ROM:
+
+ <p align="center">
+  <img src="images/objects_in_rom.png" alt="star gate guard-clause code"/> </br>
+</p>
+
+The underlined data correspond to the following objects:
+ * Blue: The Star Plant
+ * Orange: Denzil's Elevator Key
+ * Green: The Ground Elevator Key
+ * Red: The Plank
+
+As you can see, the Plank and Ground Elevator Key objects are stored very far down, especially compared to the Star Plant and Denzil's Elevator Key. Despite having a (defacto) lower priority, the Plank and Ground Elevator Key objects are more important, using those objects are pre-requisites to using the higher-priority objects (the Star Plant, Denzil's Elevator Key). 
+
+The solution is simple enough; swap the objects such that higher-priority objects come before lower-priority objects:
+
+ | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
+|---|---|
+| <img src="images/objects_in_rom.png"  /><br/>|<img src="images/objects_in_rom_fix.png" /> |
+| <p style="text-align: center;"> Old object order/priority </p> | <p style="text-align: center;"> New object order/priority </p>|
+
+Re-arranging the object order has the desired outcome; all objects render properly, but in the edge case where there are too many, the higher priority objects are rendered first.
+
+### Conclusion <a id="conclusion"></a> 
