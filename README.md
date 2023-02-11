@@ -162,7 +162,7 @@ Many enemies in the game move in a random way which I'll refer to as "switchback
 
 This change is worth the patch alone. A large portion of the game take place in spider-infested tree labyrinth, and it's easily one of the most frustrating parts of the game. This change means that if a spider is going up, it's going up. It's not going to switch and drop halfway through, no, it's just going up. All the way up. And that's wonderful.
 
-In addition, spider damage was reduced by about 2/3rds, meaning it takes roughly 13 hits from the spider to kill Dizzy, as opposed to the usual 5.
+In addition, spider damage was reduced by 1/2 (from 20 points to 10), meaning it takes 10 hits from the spider to kill Dizzy, as opposed to the usual 5.
 
 **Birds: Reduced damage and removed switchbacks**
 | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
@@ -204,8 +204,8 @@ These sources include:
   * **Sheamus the Leprechaun**: For some reason he did a ton of damage. I reduced it to be a bit more fair, since it's not obvious he'll hurt you. Reduced from 25 points of damage to 5
   * **Fire Torches**: Also ignores i-frames, reduced to 1 point of damage per frame.
   * **Lava Rock**: Ignores i-frames, reduced from 5 points to 2 points per frame.
-  * **Rats**: As in the rats not found in the sewers. Their damage was reduced from 20 to 7.
-  * **Ants**: To be fair, they're quite large. Their damage was reduced from 20 to 7. 
+  * **Rats**: As in the rats not found in the sewers. Their damage was reduced from 20 to 10.
+  * **Ants**: To be fair, they're quite large. Their damage was reduced from 20 to 10. 
 
 <p align="center">
   <img src="images/FAoDizzy_Tri.png" style="width:342px" alt="Triceratops"/><br/>
@@ -603,3 +603,11 @@ The solution is simple enough; swap the objects such that higher-priority object
 Re-arranging the object order has the desired outcome; all objects render properly, but in the edge case where there are too many, the higher priority objects are rendered first.
 
 ### Conclusion <a id="conclusion"></a> 
+Fantastic Adventures of Dizzy for NES is probably one of the hardest games I've ever played, and was always a game that I felt I could never see to the end. Of course, beating this patch would never equal the accomplishment of beating the unmodified version, but *holy pygmy cow* is the patch a better game.
+
+Over the course of making the changes for this patch, I play-tested the game to the end 5 times. Even after writing this entire damn README, I still made a last-minute change to the spider damage (accidentally set it to `#07`, was supposed to be `#0A`), which required replaying the game again to make sure that didn't introduce any unintended behavior. The problem with testing FAoD is it becomes a moving target - I'm not the average player of the game; I'm probably like... idk top 100 FAoD players in the world, currently? I know all the puzzles, where all the items are, many efficiencies, etc. - the point being, it's hard for me to say what is appropriately difficult. 
+
+This was less of an issue the last time I did this with [Journey to Silius](https://github.com/schil227/JourneyToSiliusFair) - I had only one change which I had to tweak, and when I was *just barely* able to beat the game I knew it was perfect. But, not even a month after I released the patch, I was able to play and beat the *original* game, not just the patch, due to the encyclopedic knowledge I gained while play-testing it. By comparison, in my most recent play-through of FAoD, I only died twice and had a surplus of lives at the end. That said, I would like to definitely error on the side of caution and give the player more grace - otherwise you end up with a Ghosts-n-Goblins situation (where the developers got so good at the game, they kept increasing the difficultly to compensate - or so I've heard).
+Perhaps I will have to give it a year and play-test it again; give myself time to forget everything and come into it fresh. All that said, the first time I completed a play-through I felt that jolt of excitement and feeling of accomplishment, so at least that was on point.
+
+I stand by the changes to this hack. It was a long, but fun undertaking that deepened my knowledge of Assembly a little, and I'm proud of how the game turned out. If one of the 8 people in the world who care about FAoD use this patch and finally beat the game after so many years of trying, it'll all be worth it.
