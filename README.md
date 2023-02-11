@@ -31,15 +31,42 @@ This README documents how to install the patch to your copy of FAoD, as well as 
     1. [On "Fixing" the game](#fixing)
 1. [What Was Changed](#them_changes)
     1. [What Was Not Changed](#not_changed)
+        * [Continues: No Additional Continues](#desc_no_continues)
+        * [The Minecart Minigame: No Change](#desc_no_minecart)
+        * [The Clouds: No Change](#desc_no_clouds)
+        * [The Balls in Zak's Castle: No Change](#desc_no_balls)
     1. [Changes to Dizzy](#dizzy_changes)
+        * [Starting Lives: Dizzy starts with one extra life](#desc_dizzy_life)
+        * [Invincibility Frames: Invincibility frames are doubled](#desc_dizzy_i_frames)
     1. [Changes to Enemies](#enemy_changes)
+        * [Spiders: Reduced damage and removed switchbacks](#desc_spider)
+        * [Birds: Reduced damage and removed switchbacks](#desc_birds)
+        * [Sewer Rats: Reduced damage and removed switchbacks](#desc_rats)
+        * [Guillotine: Removed switchbacks](#desc_guillotine)
+        * [And The Rest: Reduced damage from several other sources](#desc_other)
     1. [Environmental Changes](#envt_changes)
+        * [Barrel Over the Falls: Increased time to jump on the barrel](#desc_barrel)
+        * [Bubble Mini-game: Slowed down how quickly oxygen decreases](#desc_oxygen)
+        * [Graveyard Cavern: Removed particularly awful raindrop](#desc_raindrop)
     1. [Bug Fixes](#bug_fixes)
+        * [Invincibility Glitch: Removed](#desc_bug_invincibility)
+        * [Last Star Glitch: Fixed](#desc_bug_star)
+        * [Object loading: reordered priority of items](#desc_bug_objects)
 1. [How It Was Changed](#how_changes)
     1. [How Dizzy Was Changed](#how_dizzy)
+        * [Additional Starting Life](#tech_dizzy_life)
+        * [Doubling Invincibility Frames](#tech_dizzy_i_frames)
     1. [How Enemies Were Changed](#how_enemies)
+        * [Reducing Damage](#tech_damage)
+        * [Removing Switchbacks](#tech_switchbacks)
     1. [How The Environment Was Changed](#how_environment)
+        *  [Adding Frames To The Waterfall Barrel](#tech_barrel)
+        * [Increasing Oxygen For Bubble Mini-game](#tech_oxygen)
+        * [Removing The Tedious Raindrop](#tech_raindrop)
     1. [How Bugs Were Fixed](#how_bugs)
+        *  [Removing Invincibility Bug](#tech_bug_invincibility)
+        * [Fixing The Star Bug](#tech_bug_star)
+        * [Fixing The Object Loading Order](#tech_bug_objects)
 1. [Conclusion](#conclusion)
 
 ## **Installation**  <a id="installation"></a>
@@ -98,13 +125,13 @@ This section will contain an extravaganza of all the many changes that were done
 
 ### What Was Not Changed <a id="not_changed"></a>
 
-**Continues: No additional continues**
+**Continues: No Additional Continues** <a id="desc_no_continues"></a>
 
  Like the [Journey to Silius: Fair Edition](https://github.com/schil227/JourneyToSiliusFair) patch, continues (or lack-thereof, in this case) are important in keeping the game challenging. While now-a-days continues are a thing of the past, they undoubtedly served the purpose of keeping the the steaks high and pressure on the player. It really adds to the formula of NES-hard game, and to the elation the player feels once they beat it.
 
 Furthermore, there really isn't a straight-forward way to implement continues that makes sense. Maybe Dizzy could have respawned in his house, but this would've been a very large undertaking for (in my opinion) not much reward. Also had I gone this route, I probably wouldn't have addressed nearly as many of the other issues (e.g. randomness in enemy movement, etc.), since having continues would make the game significantly easier on its own.
 
-**The Minecart Minigame: No Change**
+**The Minecart Minigame: No Change** <a id="desc_no_minecart"></a>
 
  For what is probably the easiest way to game-over in this game, a small part of me actually enjoys the Minecart Minigame. It really adds a fast-paced splash of variety to the game which (once you 'git gud' at) is pretty great. Even though I had to play through this game like 4 times to test out this patch, every time I beat the minecart section, I felt that lovely dopamine kick.
 
@@ -123,7 +150,7 @@ It invoked a certain feeling that I haven't felt in nearly a decade; that feelin
 
 Anyways - I guess when I play this minecart mini-game, I feel *just a little* like Michael.
 
-**The Clouds**:
+**The Clouds: No Change** <a id="desc_no_clouds"></a>
 <p align="center">
   <img src="images/FAoDizzyFair-Clouds.png" style="width:342px" alt="Minecart clip"/><br/>
   His face says it all.
@@ -133,25 +160,28 @@ I'd wager not even the above-average player would make it this far in the vanill
 
 All that being said, I could have easily changed it. I could have made Dizzy sink in the clouds at a slower speed. I could have removed some of the butterflies. But this is one of the very few parts of the game that doesn't immediately bring death and dismemberment to Dizzy. To me, it serves as a reminder; a reflecting pool before the final boss - a reminder to just how tedious this game was before the patch. Therefore, it stays in unaltered.
 
-**The Balls in Zak's Castle: No Change**
+**The Balls in Zak's Castle: No Change** <a id="desc_no_balls"></a>
 
  Without spoiling the ending any further, it would be disingenuous of me to alter any part of the final encounter. That last area is pure FAoD.
 
 ### Changes to Dizzy  <a id="dizzy_changes"></a>
 These are the changes that were made to Dizzy directly
 
-**Starting Lives: Dizzy starts with one extra life**
+**Starting Lives: Dizzy starts with one extra life** <a id="desc_dizzy_life"></a> 
+<font size="2"> [[Tech]](#tech_dizzy_life) </font>
 
  I went back in forth on keeping this change in, but with how quickly lives can get snapped up, I think it's fairly benign. If anything it's a reminder to the quality assurance that went into this patch: before this I had instead opted to double the lives gained when completing the sliding puzzle mini-game. However when I ended up beating the game with like five extra lives, I figured it was ruining the economy. So it stands, one extra life.
 
-**Invincibility Frames: Invincibility frames are doubled**
+**Invincibility Frames: Invincibility frames are doubled** <a id="desc_dizzy_i_frames"></a>
+<font size="2"> [[Tech]](#tech_dizzy_i_frames) </font>
 
  Due to how damage works in this game, I was kinda surprised to find that Dizzy has invincibility frames (i-frames). The way it works is Dizzy get hit, for, say 10 damage. Then, Dizzy would be invulnerable to damage for 10 frames. Having a one to one ratio of damage taken vs i-frame is pretty sorry, and the result is Dizzy will typically be hit multiple times if he touches an enemy. To add to this point, since i-frames are tied to damage received, decreasing the damage enemies do makes almost no difference. For example, if Dizzy takes 5 damage, he only has 5 frames to get out of harms way.
 
 The solution was to double the i-frames Dizzy receives after getting hit. This was done in conjunction with reducing the damage from many different sources. These two changes alone made for a much more enjoyable experience; as opposed to the ultra-aggressive-two-seconds-until-you-are-dead experience.
 
 ### Changes to Enemies <a id="enemy_changes"></a>
-**Spiders: Reduced damage and removed switchbacks**
+**Spiders: Reduced damage and removed switchbacks** <a id="desc_spider"></a>
+<font size="2"> [[Tech]](#tech_switchbacks) </font>
 
 | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
@@ -164,7 +194,9 @@ This change is worth the patch alone. A large portion of the game take place in 
 
 In addition, spider damage was reduced by 1/2 (from 20 points to 10), meaning it takes 10 hits from the spider to kill Dizzy, as opposed to the usual 5.
 
-**Birds: Reduced damage and removed switchbacks**
+**Birds: Reduced damage and removed switchbacks** <a id="desc_birds"></a>
+<font size="2"> [[Tech]](#tech_switchbacks) </font>
+
 | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
 | <img src="images/base_bird.gif" style="width:342px" /><br/>|<img src="images/fair_bird.gif" style="width:342px" /> |
@@ -181,7 +213,9 @@ Since they ignore i-frames, I reduced the damage from two per frame to one. And 
 
 I was surprised by how effective this was; being able to see the consistent pattern made it so there was some actual game-play involved, instead of just praying not to get hit.
 
-**Sewer Rats: Reduced damage and removed switchbacks**
+**Sewer Rats: Reduced damage and removed switchbacks** <a id="desc_rats"></a>
+<font size="2"> [[Tech]](#tech_switchbacks) </font>
+
 | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
 | <img src="images/base_mice.gif" style="width:342px" /><br/>|<img src="images/fair_mice.gif" style="width:342px" /> |
@@ -189,7 +223,9 @@ I was surprised by how effective this was; being able to see the consistent patt
 
 Essentially the same problem as the birds, except it's harder to tell if they're hitting you. The solution is essentially the same as well; they only change direction when they hit the wall, and their damage has been reduced.
 
-**Guillotine: Removed switchbacks**
+**Guillotine: Removed switchbacks** <a id="desc_guillotine"></a>
+<font size="2"> [[Tech]](#tech_switchbacks) </font>
+
 | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
 | <img src="images/base_guillotine.gif" style="width:342px" /><br/>|<img src="images/fair_guillotine.gif" style="width:342px" /> |
@@ -197,7 +233,8 @@ Essentially the same problem as the birds, except it's harder to tell if they're
 
 Any executioner worth their salt would know that if you want to effectively kill someone, you shouldn't half-ass it. The same could be said for the rather uncomfortably common placement of Guillotines throughout the town. Instead of the frequent occurrence of misfires, now the Guillotines must reach the top before coming down. Of course, if Dizzy gets hit by one he'll still be killed - but at least you can time your movements to escape such a fate, if you're careful.
 
-**And The Rest: Reduced damage from several other sources**
+**And The Rest: Reduced damage from several other sources** <a id="desc_other"></a>
+<font size="2"> [[Tech]](#tech_damage) </font>
 
 These sources include:
   * **Triceratops**: Reduced from 25 points of damage to 16
@@ -216,7 +253,9 @@ These sources include:
 
 Outside of Dizzy and the things which wish him harm, there were several more subtle changes that were introduced as well. These include:
 
-**Barrel Over the Falls: Increased time to jump on the barrel**
+**Barrel Over the Falls: Increased time to jump on the barrel** <a id="desc_barrel"></a>
+<font size="2"> [[Tech]](#tech_barrel) </font>
+
 | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
 | <img src="images/base_barrel.gif" style="width:342px" /><br/>|<img src="images/fair_barrel.gif" style="width:342px" /> |
@@ -224,7 +263,9 @@ Outside of Dizzy and the things which wish him harm, there were several more sub
 
 Even today when I encounter this jump I get a slight zap of anxiety. Given how many times you have to cross it, adding even just a few more frames makes all the difference.
 
-**Bubble Mini-game: Slowed down how quickly oxygen decreases**
+**Bubble Mini-game: Slowed down how quickly oxygen decreases** <a id="desc_oxygen"></a>
+<font size="2"> [[Tech]](#tech_oxygen) </font>
+
 | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
 | <img src="images/base_oxygen.gif" style="width:342px" /><br/>|<img src="images/fair_oxygen.gif" style="width:342px" /> |
@@ -234,7 +275,10 @@ Once you master the bubble mini-game, it's not to terribly difficult. But I guar
 
 In order to round out the difficulty (and upset the luck-factor), Dizzy's oxygen meter decreases 1/3 slower in the fair edition than the base game. This gives the player ample time to figure out what's going on and how the new mechanics work.
 
-**Graveyard Cavern: Removed particularly awful raindrop**
+**Graveyard Cavern: Removed particularly awful raindrop** <a id="desc_raindrop"></a>
+<font size="2"> <a href="tech_raindrop">[[Tech]]</a> </font>
+ <font size="2"> [[Tech]](#tech_raindrop) </font>
+
 | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
 | <img src="images/base_raindrop.gif" style="width:342px" /><br/>|<img src="images/fair_raindrop.gif" style="width:342px" /> |
@@ -248,7 +292,9 @@ At the very end of the game, one of the last items you get is a trampoline - and
 
  In addition to enhancements, the patch also features some bug-fixes.
 
- **Invincibility Glitch: Removed**
+ **Invincibility Glitch: Removed** <a id="tech_bug_invincibility"></a>
+ <font size="2"> [[Tech]](#tech_bug_invincibility) </font>
+
  | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
 | <img src="images/base_invincibility_bug.gif" style="width:342px" /><br/>|<img src="images/fair_invincibility_bug_fix.gif" style="width:342px" /> |
@@ -256,7 +302,9 @@ At the very end of the game, one of the last items you get is a trampoline - and
 
 If you made any meaningful progress in this game, it was likely due to this glitch. It works by screwing up Dizzy's i-frame counter, by pausing while healing. The result is Dizzy no longer takes any damage from certain enemies, such as the spiders, ants, and mice. Since the patch evens out a lot of the unfair damage, it's only fair to remove the invincibility glitch. 
 
-**Last Star Glitch: Fixed**
+**Last Star Glitch: Fixed** <a id="desc_bug_star"></a>
+ <font size="2"> [[Tech]](#tech_bug_star) </font>
+
  | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
 | <img src="images/base_star_bug.gif" style="width:342px" /><br/>|<img src="images/fair_star_bug_fix.gif" style="width:342px" /> |
@@ -273,7 +321,9 @@ Without getting into the technical details, the thing that decides whether the s
   (screams internally)
 </p>
 
-**Object loading: reordered priority of items**
+**Object loading: reordered priority of items**  <a id="desc_bug_objects"></a>
+ <font size="2"> [[Tech]](#tech_bug_objects) </font>
+
  | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
 | <img src="images/base_item_spawning.gif" style="width:342px" /><br/>|<img src="images/fair_item_spawning.gif" style="width:342px" /> |
@@ -292,7 +342,8 @@ This section contains the technical details of what was changed. I wont go over 
 ### How Dizzy Was Changed <a id="how_dizzy"></a>
 <br>
 
-**Additional Starting Life**
+**Additional Starting Life** <a id="tech_dizzy_life"></a>
+<font size="2"> [[Desc]](#desc_dizzy_life) </font>
 
 This was one of the easier changes (perhaps an exercise to the ambitious reader). Dizzy's life count is stored in address `$9A`. He starts with 3 lives, which are hard coded at address `$000021`:
 
@@ -303,7 +354,8 @@ This was one of the easier changes (perhaps an exercise to the ambitious reader)
 
 The change is simple enough; load `#03` into the register and he starts with 4 lives.
 
-**Doubling Invincibility Frames**
+**Doubling Invincibility Frames** <a id="tech_dizzy_i_frames"></a>
+<font size="2"> [[Desc]](#desc_dizzy_i_frames) </font>
 
 This is where things get a little more interesting. After getting hit by an enemy, Dizzy is temporarily invulnerable for several frames (i-frames). There are two addresses which are relevant to Dizzy's health and i-frames: `$F2` and `$F3`.
   * `$F2` keeps track of Dizzy's actual health. When Dizzy gets hit by an enemy, the damage is immediately added to this.
@@ -342,7 +394,8 @@ The result is as expected; the `$F3` register gets incremented every other frame
 ### How Enemies Were Changed <a id="how_enemies"></a>
 How enemy movement and damage was changed is mostly the same for all of them, so I'll only give a few examples.
 
-**Reducing Damage**
+**Reducing Damage** <a id="tech_damage"></a>
+<font size="2"> [[Desc]](#desc_spider) </font>
 
 This is also a very easy change, if you know how to use the emulator. Since we know Dizzy's health is tied to `$F2`, by simply adding a breakpoint in the debugger, we can force the game to halt whenever that value gets changed. Once Dizzy walks into an enemy, sure enough the game will pause and point to where `$F2` is getting changed.
 
@@ -359,7 +412,8 @@ This example was using the patched version of the game; the original value is `#
 
 Anyways, by performing this operation among other damage sources, I was able to track and change a few of them accordingly.
 
-**Removing Switchbacks**
+**Removing Switchbacks** <a id="tech_switchbacks"></a>
+<font size="2"> [[Desc]](#desc_spider) </font>
 
 As mentioned previously, a 'switchback' is the term I use for when an enemy changes direction mid-way through their trajectory - introducing randomness in their movement patterns. Removing the switchbacks makes enemy movement much more predictable, and therefore the game-play less frustrating.
 
@@ -400,7 +454,9 @@ The logic controlling the Guillotine is practically identical, and the solution 
  ### How The Environment Was Changed <a id="how_environment"></a> 
  In addition to changing Dizzy and Enemies, parts of the world were (slightly) changed.
 
- **Adding Frames To The Waterfall Barrel**
+ **Adding Frames To The Waterfall Barrel** <a id="tech_barrel"></a>
+ <font size="2"> [[Desc]](#desc_barrel) </font>
+
  <p align="center">
   <img src="images/fair_barrel.gif" alt="Waterfall Barrel"/> </br>
   This Barrel, specifically.
@@ -442,7 +498,8 @@ In the portion underlined in red represents the `#30` to `#48` state (before the
 
 As a result of the two changes above, the barrel shows up sooner (and at the correct height), thus giving Dizzy more time to cross the waterfall.
 
-**Increasing Oxygen For Bubble Mini-game**
+**Increasing Oxygen For Bubble Mini-game** <a id="tech_oxygen"></a>
+<font size="2"> [[Desc]](#desc_oxygen) </font>
 
 This change was fairly simple. Dizzy's oxygen meter starts at a high number and ticks down over time. The current value of the oxygen is stored at `$9E`. The code responsible for deciding to decrement that value is located around `$8395` (`$028395` with offsets):
 
@@ -457,7 +514,9 @@ The fix is as simple as reducing the number of chances. In the modified Fair Ver
 
 The result is: for a given value of the counter, it only has two chances instead of three - meaning in the Fair Version the value decreases at a rate 2/3rds of the original.
 
-**Removing The Tedious Raindrop**
+**Removing The Tedious Raindrop** <a id="tech_raindrop"></a>
+<font size="2"> [[Desc]](#desc_raindrop) </font>
+
 For such a simple change, this one took quite a while to figure out. There are tons of raindrops in this particular area, so isolating which values corresponded to which raindrop was a bit tedious. Once I was able to figure out part of it (my notes say that it's current height was stored at `$04EA` in RAM), I was able to trace back to where that value was initially loaded from in ROM (**R**ead **O**nly **M**emory). The ROM data contained all the hardcoded values for each of raindrops; e.g. their start and end location, how frequently they should drop, etc. In memory, it looked like this:
 
 `... 64 90 01 14 6E 64 D1 01 08 82 64 FE 01 08 56 32 68 01 ...`
@@ -493,7 +552,8 @@ While play-testing the patch, I encountered a few bugs along the way. Some of wh
 
 However, there were a few that I felt inspired to fix.
 
-**Removing Invincibility Bug**
+**Removing Invincibility Bug** <a id="tech_bug_invincibility"></a>
+<font size="2"> [[Desc]](#desc_bug_invincibility) </font>
 
 Since beating the game originally all but relied on using this glitch, a good measure of this patch would be to remove it completely.
 
@@ -529,7 +589,8 @@ All options considered, it's probably the first case.
 
 Anyway with this bug fixed, Dizzy now remains the fragile, pathetic egg he is. Der HerrGott gibt, der HerrGott nimmt.
 
-**Fixing The Star Bug**
+**Fixing The Star Bug** <a id="tech_bug_star"></a>
+<font size="2"> [[Desc]](#desc_bug_star) </font>
 
 Of all the bug fixes I think this one is most important, as it could easily soft-lock your game at the very, very end.
 
@@ -549,7 +610,8 @@ The above fix works, but it would be much nicer if the star didn't appear at all
 
  `$23` is sourced from `$0743` (not to be confused with the remaining star counter, `$0742`). The solution was simply to load the value from `$0743` into `$23` after the cut-scene ends. Thus, the correct Area Id was loaded, so the star was no longer displayed.
 
-**Fixing The Object Loading Order**
+**Fixing The Object Loading Order** <a id="tech_bug_objects"></a>
+<font size="2"> [[Desc]](#desc_bug_objects) </font>
 
 This was a rather obtuse bug that I found on my penultimate play-through. Basically for a given area (e.g. the YolkFolk Forrest Floor) there are several "rooms" connected horizontally. Amongst all these rooms, there is a limited number of "slots" to store objects (objects in this case being the white items he can pick up, not including stars or fruit). If Dizzy brings in objects from a different area and drops them on the ground, they are rendered as sitting on the ground. However, if too many objects are dropped in a given area, on *some* of those objects will disappear.
 
@@ -603,6 +665,10 @@ The solution is simple enough; swap the objects such that higher-priority object
 Re-arranging the object order has the desired outcome; all objects render properly, but in the edge case where there are too many, the higher priority objects are rendered first.
 
 ### Conclusion <a id="conclusion"></a> 
+ <p align="center">
+  <img src="images/FAoDizzy_Fair-Zaks.bmp" alt="guard glitch"/> </br>
+</p>
+
 Fantastic Adventures of Dizzy for NES is probably one of the hardest games I've ever played, and was always a game that I felt I could never see to the end. Of course, beating this patch would never equal the accomplishment of beating the unmodified version, but *holy pygmy cow* is the patch a better game.
 
 Over the course of making the changes for this patch, I play-tested the game to the end 5 times. Even after writing this entire damn README, I still made a last-minute change to the spider damage (accidentally set it to `#07`, was supposed to be `#0A`), which required replaying the game again to make sure that didn't introduce any unintended behavior. The problem with testing FAoD is it becomes a moving target - I'm not the average player of the game; I'm probably like... idk top 100 FAoD players in the world, currently? I know all the puzzles, where all the items are, many efficiencies, etc. - the point being, it's hard for me to say what is appropriately difficult. 
