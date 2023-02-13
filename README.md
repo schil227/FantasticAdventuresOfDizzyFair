@@ -3,7 +3,7 @@
   <img src="images/FAoDizzy-title.png" alt="Title"/>
 </p>
 
-The Fantastic Adventures of Dizzy: Fair Edition is a patch which I created for the NES game The Fantastic Adventures of Dizzy (FAoD). The patch includes several (relatively) simple changes to make the game significantly less tedious. It also fixes a few bug (one of which is especially heinous). With this patch, what was once a nearly impossible game becomes a fun, novel experience which ranks among other classic NES titles.
+The Fantastic Adventures of Dizzy: Fair Edition is a patch which I created for the NES game The Fantastic Adventures of Dizzy (FAoD). The patch includes several (relatively) simple changes to make the game significantly less tedious. It also fixes a few bugs. With this patch, what was once a nearly impossible game becomes a fun, novel experience which ranks among other classic NES titles.
 
 Change Summary:
  * Dizzy has better temporary invincibility after taking damage (i-frames).
@@ -12,11 +12,11 @@ Change Summary:
  * Birds/Bats do less damage and move in (more) predictable patterns
  * Ants/mice do less damage, and mice in the sewers move in (more) predictable patterns
  * Guillotines in the town move in predictable patterns
- * Damage from torches, lava bombs, Triceratops, and Leprechaun are all reduced
+ * Damage from several different sources have been reduced reduced
  * Added more frames to jump on the log that comes down the waterfall between the town and Yolkfolk tree-village. 
- * Reduced how quickly the Oxygen meter goes down during the bubble mini-game
+ * Reduced how quickly the Oxygen meter decreases during the bubble mini-game
  * Removed an especially tedious raindrop in the graveyard near the end of the game
- * Fixed a bug where the last star can be collected twice, which soft-locks the player at the very end of the game
+ * Fixed a bug where the last star can be collected twice (which soft-locks the player at the very end of the game)
  * Removed the (partial) invulnerability glitch
  * Fixed a glitch were lower-priority items are displayed instead of high-priority items (e.g. the star-plant object had priority over the plank object)
 
@@ -85,23 +85,23 @@ To install the patch, follow these steps:
 This section explains why the patch was created, including some (non-technical) design analysis.
 
 ### **Background** <a id="background"></a>
-It's amazing just how great FAoD is. The game-play a blend of adventure, platforming, and puzzle, which is really quite impressive. The art-style is crisp and pushes the limits of what the NES was capable of. I'll admit, while play-testing this patch, I caught myself staring at the brick walls of the town sewers; its so fascinating how they achieved the simple illusion of the wall curving as it goes up.
+It's amazing just how great FAoD is. The game-play is a blend of adventure, platforming, and puzzle solving. The art-style is crisp and pushes the limits of what the NES was capable of. I'll admit, while play-testing this patch, I caught myself staring at the brick walls of the town sewers; its so fascinating how they achieved the simple illusion of the wall curving as it goes up.
 
 <p align="center">
   <img src="images/FAoDizzy_Fair-Sewer.bmp" alt="Sewers"/><br/>
   <i>Just look at that brickwork!</i>
 </p>
 
-And, the music is some of the best in the entire NES library. I occasionally put it on in the background while I'm working - some great bopping tunes. It's a shame that (to put it harshly) they ruined the game with a few terrible choices.
+The music is some of the best in the entire NES library. I occasionally put it on in the background while I'm working - some great bopping tunes. It's a shame that (to put it harshly) they ruined the game with a few terrible choices.
 
-As mentioned, the vanilla version of game is nearly unbeatable. Dizzy takes an absurd amount of damage from everything, and the randomness in enemy movement makes getting hit nearly unavoidable. Grinding the entire game to a halt while Dizzy waits for a spider to get out of his way, only to have it immediately come back down half-way through its ascent, is the epitome of tedium. Not to mention all the 1-hit death-traps, which can be as innocuous as a pale string to a speeding mine-cart collision.
+As mentioned, the vanilla version of game is nearly unbeatable. Dizzy takes an absurd amount of damage from everything, and the randomness in enemy movement makes getting hit nearly unavoidable. A match made in heaven.The game is constantly ground to a halt whenever a spider is encountered, as the player must very patiently wait for the spider to get out of the f****** way. Not to mention all the 1-hit death-traps, which can be as innocuous as a nearly-invisible snare trap, to a speeding head-on mine-cart collision.
 
 <p align="center">
   <img src="https://cdn.firstwefeast.com/assets/2014/03/7lk1z.gif" alt="Egg getting destroyed"/><br/>
   Granted, they captured the essence of what it's like to be an egg.
 </p>
 
- It's laughable to think of just how much the game is stacked against you. Among imprecise platforming, trial-and-error obstacles, and enemy movement that requires saint-like patience, know that this is all it takes:
+ It's laughable to think of just how much the game is stacked against the player. Among imprecise platforming, trial-and-error obstacles, and enemy movement that requires saint-like patience, know that this is all it takes:
 
 <p align="center">
   <img src="images/spider_normal.gif" style="width:342px" alt="Egg getting destroyed"/><br/>
@@ -113,15 +113,15 @@ And what happens after you get game over? Back to the title screen. Given all th
 Thus we have the genesis of this patch: how can I minimally change the game such that the extreme difficulty is reduced to something more manageable, while keeping the original spirit of the game intact? In other words, if the original developers realized just how impossible the game was, what would they change?
 
 ### **On "Fixing" the game** <a id="fixing"></a>
-Claiming that I'm "fixing" the game is certainly a strong statement, one which I do not take lightly. Game design back then was very focused on the player getting their money's worth, and critics tend to throw the phrase "bad game design" around pretty loosely. To the game's credit, yes you certainly would get your money's worth, and yes it really does feel like I'm playing an egg-simulator - however I can not turn a blind eye to some of the more questionable things about this game.
+Claiming that I'm "fixing" the game is certainly a strong statement, one which I do not take lightly. Game design back then was very focused on the player getting their money's worth, so the harder the better. To the game's credit, yes you certainly would get your money's worth, and yes it really does feel like I'm playing a soft-boiled egg - however I can not turn a blind eye to some of the more questionable design choices about this game.
 
-Unlike my Fair Edition patch for [Journey to Silius](https://github.com/schil227/JourneyToSiliusFair), which just skirted over the line of being unreasonable, FAoD stomps all over it. While I was looking at the code and discovered that *just touching* a spider takes away **one fifth** of your total health, I couldn't believe it. I couldn't believe that they would decide to not only throw *dozens* of spiders *just* in the starting, not only that their random movement means you'll spend five to ten seconds waiting for the spider to get all the way out of the way, but that it just lops off a huge chunk of your health. AND due to how i-frames work, you could end up getting hit multiple times! 
+Unlike my Fair Edition patch for [Journey to Silius](https://github.com/schil227/JourneyToSiliusFair), which just skirted over the line of being unreasonable, FAoD stomps all over it. While I was looking at the code and discovered that *just touching* a spider takes away **one fifth** of your total health, I couldn't believe it. I couldn't believe that they would decide to not only throw *dozens* of spiders *just* in the starting area, not only that their random movement means you'll spend five to ten seconds waiting for the spider to get all the way out of the way, but that it just lops off a huge chunk of your health. AND due to how i-frames work, you could end up getting hit multiple times! 
 
 ... I'm getting off topic. The point is, in this adventure-puzzle-platformer which takes hours to beat, that you could suddenly lose at very swiftly, I felt much more justified in making some changes. And despite my grievances with how some things were handled, I really do think this is a magical game worth the time and effort to "fix". Again, the patch does not aim to trivialize the challenge, but rather to keep the the game as close as possible to its original vision. When the player beats the patch, they should feel like they really completed a tough but (mostly) fair NES game.
 
 ## What Was Changed <a id="them_changes"></a>
 
-This section will contain an extravaganza of all the many changes that were done as a part of this patch. The details of these changes will stick to game-play and design, and the nitty-gritty coding details will be in the technical section. While the changes for this patch were numerous, it's also worth discussing what *wasn't* changed.
+This section is an extravaganza of all the many changes that were made in this patch. The details of these changes will stick to game-play and design, and the nitty-gritty coding details will be in the technical section. While the changes for this patch were numerous, it's also worth discussing what *wasn't* changed.
 
 ### What Was Not Changed <a id="not_changed"></a>
 
@@ -133,22 +133,22 @@ Furthermore, there really isn't a straight-forward way to implement continues th
 
 **The Minecart Minigame: No Change** <a id="desc_no_minecart"></a>
 
- For what is probably the easiest way to game-over in this game, a small part of me actually enjoys the Minecart Minigame. It really adds a fast-paced splash of variety to the game which (once you 'git gud' at) is pretty great. Even though I had to play through this game like 4 times to test out this patch, every time I beat the minecart section, I felt that lovely dopamine kick.
+ For what is probably the easiest way to game-over in this game, a small part of me actually enjoys the Minecart Minigame. It really adds a fast-paced splash of variety to the game which (once you 'git gud' at) is pretty great. Even though I had to play through this game like ~~4~~ 5 times to test out this patch, every time I beat the minecart section, I felt that lovely dopamine kick.
 
 <p align="center">
   <img src="images/fair_minecart.gif" style="width:342px" alt="Minecart clip"/><br/>
   <i>White knuckle baby, YEAH!</i>
 </p>
 
-From a technical design standpoint, I don't see a lot of ways to improve it that wouldn't ruin the experience. Make it so you don't lose a life? Remove some of the enemies? Slow down the rifts that sever the tracks? Color-code the "correct" track? Make any exit lead to the end? I don't like any of these options. Fortunately it can be done very early in the game, so I would recommend going straight to it as completing it as possible.
+From a technical design standpoint, I don't see a lot of ways to improve it that wouldn't ruin the experience. Make it so you don't lose a life? Remove some of the enemies? Slow down the rifts that sever the tracks? Color-code the "correct" track? Make any exit lead to the end? I don't like any of these options. Fortunately it can be done very early in the game, so I would recommend going straight to it as completing it as soon as possible.
 
-There was a guy I went to college with, his name was Michael. He was a lanky, quite guy who grew up working on his father's farm. He was smart too - pursuing a degree in Mathematics and a minor in Computer Science. Anyways, we wound up working on a group project in class together, and I got to know him. Turns out we both loved the Nintendo 64, and we would arrange to meet at the computer lab after hours to play some Perfect Dark many times. He didn't have many games with him - but one that he did, and seemed to cherish above the others, was his copy of *Star Wars Episode 1: Racer*. I had only a passing awareness of the game, having played it (poorly) at Target and writing it off as to difficult to bother. So one day, while I'm still finishing up some work in the lab, he arrives and he hooks the N64 up to the projector. While waiting for me, he pops in SWE1:Racer and starts playing.
+There was a guy I went to college with, his name was Michael. He was a lanky, quite guy who grew up working on his father's farm. He was smart too - pursuing a degree in Mathematics and a minor in Computer Science. Anyways, we wound up working together on a group project, and I got to know him. Turns out we both loved the Nintendo 64, and we would arrange to meet at the computer lab after hours to play some Perfect Dark many times. He didn't have many games with him - but one that he did, and seemed to cherish above the others, was his copy of *Star Wars Episode 1: Racer*. I had only a passing awareness of the game, having played it (poorly) at Target and writing it off as to difficult to bother. So one day, while I'm still finishing up some work in the lab, he arrives and he hooks the N64 up to the projector. While waiting for me, he pops in SWE1:Racer and starts playing.
 
 He was *amazing*.
 
 It invoked a certain feeling that I haven't felt in nearly a decade; that feeling of watching your older cousin beat Ocarina of Time. That feeling of being so inept at a task you couldn't being to figure out how to accomplish it - then watching a master do it with ease. Perhaps SWE1:Racer isn't that difficult, maybe I just didn't give it a fair try. But I don't think I ever will, since it would risk tarnishing the nice memory of the best pod-racer I knew.
 
-Anyways - I guess when I play this minecart mini-game, I feel *just a little* like Michael.
+Anyways - I guess when I play this Minecart Minigame, I feel *just a little* like Michael.
 
 **The Clouds: No Change** <a id="desc_no_clouds"></a>
 <p align="center">
@@ -156,26 +156,26 @@ Anyways - I guess when I play this minecart mini-game, I feel *just a little* li
   His face says it all.
 </p>
 
-I'd wager not even the above-average player would make it this far in the vanilla version of the game, but this area sucks. The cloud platforming section is thankfully not a source of many lives lost, but it's arguably one of the most tedious parts of the game. When Dizzy stands on a cloud, he slowly sinks down in it until he falls through it. This means you have to constantly be jumping in place to maintain your altitude. This wouldn't be so bad if not for all the butterflies that threaten to bop you around and reverse your controls. What's more, you have to do this section several times.
+I'd wager not even the above-average player would make it this far in the vanilla version of the game, but this area sucks. The cloud platforming section doesn't actually have anything which can harm Dizzy, but it's arguably one of the most tedious parts of the game. When Dizzy stands on a cloud, he slowly sinks down in it until he falls through it. This means you have to be constantly jumping in place to maintain your altitude. This wouldn't be so bad if not for all the butterflies that threaten to bop you around and reverse your controls. What's more, you have to do this section *at least* three times.
 
 All that being said, I could have easily changed it. I could have made Dizzy sink in the clouds at a slower speed. I could have removed some of the butterflies. But this is one of the very few parts of the game that doesn't immediately bring death and dismemberment to Dizzy. To me, it serves as a reminder; a reflecting pool before the final boss - a reminder to just how tedious this game was before the patch. Therefore, it stays in unaltered.
 
 **The Balls in Zak's Castle: No Change** <a id="desc_no_balls"></a>
 
- Without spoiling the ending any further, it would be disingenuous of me to alter any part of the final encounter. That last area is pure FAoD.
+ Without spoiling the ending any further, it would be disingenuous of me to alter any part of the final encounter. That last area is *pure* FAoD.
 
 ### Changes to Dizzy  <a id="dizzy_changes"></a>
-These are the changes that were made to Dizzy directly
+These are the changes that were made to Dizzy directly.
 
 **Starting Lives: Dizzy starts with one extra life** <a id="desc_dizzy_life"></a> 
 <font size="2"> [[Tech]](#tech_dizzy_life) </font>
 
- I went back in forth on keeping this change in, but with how quickly lives can get snapped up, I think it's fairly benign. If anything it's a reminder to the quality assurance that went into this patch: before this I had instead opted to double the lives gained when completing the sliding puzzle mini-game. However when I ended up beating the game with like five extra lives, I figured it was ruining the economy. So it stands, one extra life.
+ I went back in forth on keeping this change in, but with how quickly lives can get snapped up, I think it's fairly benign. If anything it's a reminder to the quality assurance that went into this patch: the first change double the lives gained when completing the sliding puzzle mini-game. However when I ended up beating the game with, like, eight extra lives, I figured it was ruining the life-economy. So it stands, we'll just keep it at one extra life.
 
 **Invincibility Frames: Invincibility frames are doubled** <a id="desc_dizzy_i_frames"></a>
 <font size="2"> [[Tech]](#tech_dizzy_i_frames) </font>
 
- Due to how damage works in this game, I was kinda surprised to find that Dizzy has invincibility frames (i-frames). The way it works is Dizzy get hit, for, say 10 damage. Then, Dizzy would be invulnerable to damage for 10 frames. Having a one to one ratio of damage taken vs i-frame is pretty sorry, and the result is Dizzy will typically be hit multiple times if he touches an enemy. To add to this point, since i-frames are tied to damage received, decreasing the damage enemies do makes almost no difference. For example, if Dizzy takes 5 damage, he only has 5 frames to get out of harms way.
+ Due to how damage works in this game, I was kinda surprised to find that Dizzy has invincibility frames (i-frames). The way it's implemented is when Dizzy gets hit for N damage, he gets N frames of invincibility. Having a one to one ratio of damage to i-frames is pretty sorry, and the result is Dizzy will typically be hit multiple times if he touches an enemy. Also, decreasing the damage enemies do makes almost no difference. For example, if Dizzy takes 5 damage, he only has 5 frames to get out of harms way.
 
 The solution was to double the i-frames Dizzy receives after getting hit. This was done in conjunction with reducing the damage from many different sources. These two changes alone made for a much more enjoyable experience; as opposed to the ultra-aggressive-two-seconds-until-you-are-dead experience.
 
@@ -188,7 +188,7 @@ The solution was to double the i-frames Dizzy receives after getting hit. This w
 | <img src="images/base_spider.gif" style="width:342px" alt="fair game spider movement"/><br/>|<img src="images/fair_spider.gif" style="width:342px" alt="base game spider movement"/> |
 | <p style="text-align: center;"> Spiders move erratically</p> | <p style="text-align: center;"> Spiders move consistently up and down</p>|
 
-Many enemies in the game move in a random way which I'll refer to as "switchbacks". Switchbacks happen when the enemy is seemingly moving in one direction, but then "switches back" part way through. This is most obviously seen in the spiders from the base game: the spider moves down quickly, goes up a little, but then does a fake-out and drops all the way down half way through. Dizzy does not move fast enough to dodge the spider unless it is at the very top, which means you need iron patience to *always* wait *every time* for the spider to go all the way up in the base game, or run the risk and lose 20% of your health.
+Many enemies in the game move in a random way, which I'll refer to as "switchbacks". Switchbacks happen when the enemy is seemingly moving in one direction, but then "switches back" part way through. This is most obviously seen in the spiders from the base game: the spider moves down quickly, goes up a little, but then does a fake-out and drops all the way down half way through. Dizzy does not move fast enough to dodge the spider unless it is at the very top, which means you need iron patience to *always* wait *every time* for the spider to go all the way up in the base game, or run the risk and lose 20% of your health.
 
 This change is worth the patch alone. A large portion of the game take place in spider-infested tree labyrinth, and it's easily one of the most frustrating parts of the game. This change means that if a spider is going up, it's going up. It's not going to switch and drop halfway through, no, it's just going up. All the way up. And that's wonderful.
 
@@ -221,7 +221,7 @@ I was surprised by how effective this was; being able to see the consistent patt
 | <img src="images/base_mice.gif" style="width:342px" /><br/>|<img src="images/fair_mice.gif" style="width:342px" /> |
 | <p style="text-align: center;"> Mice change direction frequently</p> | <p style="text-align: center;"> Mice only change direction when they hit an edge</p>|
 
-Essentially the same problem as the birds, except it's harder to tell if they're hitting you. The solution is essentially the same as well; they only change direction when they hit the wall, and their damage has been reduced.
+Essentially the same problem as the birds, except it's harder to tell if they're hitting you. The solution is the same as well: they only change direction when they hit the wall, and their damage has been reduced.
 
 **Guillotine: Removed switchbacks** <a id="desc_guillotine"></a>
 <font size="2"> [[Tech]](#tech_switchbacks) </font>
@@ -231,7 +231,7 @@ Essentially the same problem as the birds, except it's harder to tell if they're
 | <img src="images/base_guillotine.gif" style="width:342px" /><br/>|<img src="images/fair_guillotine.gif" style="width:342px" /> |
 | <p style="text-align: center;"> Guillotine can drop at any time</p> | <p style="text-align: center;"> Guillotine only drops when it's at the top</p>|
 
-Any executioner worth their salt would know that if you want to effectively kill someone, you shouldn't half-ass it. The same could be said for the rather uncomfortably common placement of Guillotines throughout the town. Instead of the frequent occurrence of misfires, now the Guillotines must reach the top before coming down. Of course, if Dizzy gets hit by one he'll still be killed - but at least you can time your movements to escape such a fate, if you're careful.
+Any executioner worth their salt would know that if you want to effectively kill someone, you shouldn't half-ass it. Instead of the frequent occurrence of misfires, now the Guillotines must reach the top before coming down. Of course, if Dizzy gets hit by one he'll still be killed - but at least you can time your movements to escape such a fate, if you're careful.
 
 **And The Rest: Reduced damage from several other sources** <a id="desc_other"></a>
 <font size="2"> [[Tech]](#tech_damage) </font>
@@ -251,7 +251,7 @@ These sources include:
 
 ### Environmental Changes <a id="envt_changes"></a>
 
-Outside of Dizzy and the things which wish him harm, there were several more subtle changes that were introduced as well. These include:
+Outside of Dizzy and the things which wish him harm, there were several more subtle changes that were introduced as well.
 
 **Barrel Over the Falls: Increased time to jump on the barrel** <a id="desc_barrel"></a>
 <font size="2"> [[Tech]](#tech_barrel) </font>
@@ -271,7 +271,7 @@ Even today when I encounter this jump I get a slight zap of anxiety. Given how m
 | <img src="images/base_oxygen.gif" style="width:342px" /><br/>|<img src="images/fair_oxygen.gif" style="width:342px" /> |
 | <p style="text-align: center;"> Oxygen meter ticks down somewhat quickly</p> | <p style="text-align: center;"> Oxygen meter ticks down slightly slower</p>|
 
-Once you master the bubble mini-game, it's not to terribly difficult. But I guarantee the first few times you play it, Dizzy will almost certainly drown. It's a pretty cool mini-game, but a lot of mechanics are thrown at you. If you don't catch on immediately (and get lucky, frankly), it's a watery grave for Dizzy. 
+Once you master the bubble mini-game, it's not to terribly difficult. But I guarantee the first few times you play it, Dizzy will almost certainly drown. It's a pretty cool mini-game, but a lot of new mechanics are thrown at you. If you don't catch on immediately (and get lucky, frankly), it's a watery grave for Dizzy. 
 
 In order to round out the difficulty (and upset the luck-factor), Dizzy's oxygen meter decreases 1/3 slower in the fair edition than the base game. This gives the player ample time to figure out what's going on and how the new mechanics work.
 
@@ -284,7 +284,7 @@ In order to round out the difficulty (and upset the luck-factor), Dizzy's oxygen
 | <img src="images/base_raindrop.gif" style="width:342px" /><br/>|<img src="images/fair_raindrop.gif" style="width:342px" /> |
 | <p style="text-align: center;"> Oxygen meter ticks down somewhat quickly</p> | <p style="text-align: center;"> Oxygen meter ticks down slightly slower</p>|
 
-At the very end of the game, one of the last items you get is a trampoline - and after playing through the game four times, I can still say with confidence that I have no idea how the thing is supposed to work. But its purpose is to bounce dizzy out of a cavern, and at the only spot where you can do that is a god damn raindrop. Why - why put a raindrop *there* of all places? Why punish the player attempting to learn a new, *very obtuse* mechanic at the end of the game?
+At the very end of the game, one of the last items you get is a trampoline - and after playing through the game ~~four~~ five times, I can still say with confidence that I have no idea how the thing is supposed to work. But its purpose is to bounce dizzy out of a cavern, and in the only spot where you can do that is a god damn raindrop. Why - why put a raindrop *there* of all places? Why punish the player attempting to learn a new, *very obtuse* mechanic at the end of the game?
 
  I actually lost a life at that part, and I just couldn't stand the thought of someone getting game over there, after overcoming all the trials of the game. I resisted the urge to just remove enemies and hazards for the entire game, but this raindrop was a bridge too far.
 
@@ -300,7 +300,7 @@ At the very end of the game, one of the last items you get is a trampoline - and
 | <img src="images/base_invincibility_bug.gif" style="width:342px" /><br/>|<img src="images/fair_invincibility_bug_fix.gif" style="width:342px" /> |
 | <p style="text-align: center;"> The glitch makes Dizzy invulnerable to some enemies</p> | <p style="text-align: center;"> The glitch no longer works</p>|
 
-If you made any meaningful progress in this game, it was likely due to this glitch. It works by screwing up Dizzy's i-frame counter, by pausing while healing. The result is Dizzy no longer takes any damage from certain enemies, such as the spiders, ants, and mice. Since the patch evens out a lot of the unfair damage, it's only fair to remove the invincibility glitch. 
+If you made any meaningful progress in the base version of the game, it was likely due to this glitch. It works by screwing up Dizzy's i-frame counter, by pausing while healing. The result is Dizzy no longer takes any damage from certain enemies, such as the spiders, ants, and mice. Since the patch evens out a lot of the unfair damage, it's only fair to remove the invincibility glitch. 
 
 **Last Star Glitch: Fixed** <a id="desc_bug_star"></a>
  <font size="2"> [[Tech]](#tech_bug_star) </font>
@@ -310,11 +310,11 @@ If you made any meaningful progress in this game, it was likely due to this glit
 | <img src="images/base_star_bug.gif" style="width:342px" /><br/>|<img src="images/fair_star_bug_fix.gif" style="width:342px" /> |
 | <p style="text-align: center;"> After collecting the last star, it can be collected again</p> | <p style="text-align: center;"> The last star is properly cleared </p>|
 
-This bug is especially heinous, and I would rank this bug-fix up there with fixing the spider movement. During the game, Dizzy has to collect 100 stars - a particularly daunting task. When all the stars are collected, the barrier to Zak's chamber, and the final area, is open. 
+This bug is especially heinous; I would rank this one of the most important changes in this patch, up there with fixing the spider movement. During the game, Dizzy has to collect 100 stars - a particularly daunting task. When all the stars are collected, the barrier to Zak's chamber, and the final area, is open. 
 
 However, sometimes the very final star you collect doesn't go away, even after the brief cut-scene explains the barrier is open. Many players may assume that they need to collect the star again, that the cut-scene played prematurely. However, if you collect that star again, the game becomes soft-locked - *at the very end of the game*. 
 
-Without getting into the technical details, the thing that decides whether the star gate is active or not is equal to the number of stars Dizzy has collected. When Dizzy collects one too many stars, the count is no longer equal to zero, and the star gate is now up forever. Imagine my surprise when this happened to me on one of my test playthroughs.
+Without getting into the technical details, the thing that decides whether the star gate is active or not is equal to the number of stars Dizzy has collected. When Dizzy collects one too many stars, the count is no longer equal to zero, and the star gate is now blocking Dizzy forever. Imagine my surprise when this happened to me on one of my test play-throughs.
 
 <p align="center">
   <img src="images/FAoDizzy_Fair-Missing_One_Star.bmp" alt="Triceratops "/><br/>
@@ -329,12 +329,12 @@ Without getting into the technical details, the thing that decides whether the s
 | <img src="images/base_item_spawning.gif" style="width:342px" /><br/>|<img src="images/fair_item_spawning.gif" style="width:342px" /> |
 | <p style="text-align: center;"> More important items get de-spawned </p> | <p style="text-align: center;"> Less important items get de-spawned </p>|
 
-This one is a weird one, so I'll try to explain simply. When there's too many items (objects) in an area (e.g Keys, Chicken, Plank, etc.) the NES has a hard time rendering them all. Since Dizzy can technically drop lots of items in one area, the game only shows the first X items when it reloads an area. 
+This one is a weird one, so I'll try to explain simply. When there's too many items (objects like Keys, Chicken, Plank, etc.) in an area, the NES has a hard time rendering them all. Since Dizzy can technically drop lots of items in one area, the game only shows the first X items when it reloads an area. 
 
-The problem with this is that some items are loaded with a higher priority; except that these items cannot be accessed before other items of a lesser priority. For example, the Star Plant object has a higher priority than the Plank object, but it cannot be accessed until the Plank is used to cross a gap. As a result, the important Plank object doesn't get loaded, but the Star Plant (which isn't even on screen) gets loaded instead.
+The problem with this is that some items are loaded with a higher priority; except that these items cannot be accessed or used before other items of a lesser priority. For example, the Star Plant object has a higher priority than the Plank object, but it cannot be accessed until the Plank is used to cross a gap. As a result, when there are too many objects in an area the (important) Plank object doesn't get loaded, but the Star Plant (which isn't even on screen) gets loaded instead.
 
 This fix changes the priority of the objects in the starting area, such that important objects (e.g. Plank, Ground Elevator Key) have a higher priority over other Objects (e.g. Denzil's Elevator Key, Star Plant). The result is players won't be confused by items that suddenly go missing.
-1
+
 ## How It Was Changed <a id="how_changes"></a>
 
 This section contains the technical details of what was changed. I wont go over the process of sleuthing through the code to figure out how it works and where to make the change (which was 90% of the work), but I will provide details and assembly code. If this part isn't of any interest to you, feel free to skip to the conclusion.
@@ -360,7 +360,7 @@ The change is simple enough; load `#03` into the register and he starts with 4 l
 This is where things get a little more interesting. After getting hit by an enemy, Dizzy is temporarily invulnerable for several frames (i-frames). There are two addresses which are relevant to Dizzy's health and i-frames: `$F2` and `$F3`.
   * `$F2` keeps track of Dizzy's actual health. When Dizzy gets hit by an enemy, the damage is immediately added to this.
     * For example, if Dizzy already had 10 damage done to him, and then another 5, `$F2` would immediately go from 10 to 15 (assuming no i-frames).
-  * `$F3` ticks up (or down, if healing) to the value of `$F2`. When a damage source checks for i-frames, what it's doing is comparing `$F2` with `$F3`. If they're equal, then Dizzy receives damage. Otherwise, Dizzy is temporarily invulnerable.
+  * `$F3` ticks up (or down, if healing) to the value of `$F2`. When a damage source checks for i-frames, what it's doing is comparing `$F2` with `$F3`. If they're equal, then Dizzy can receive damage. Otherwise, Dizzy is temporarily invulnerable.
     * For example, the frame after Dizzy gets hit by an enemy, `$F2` jumps from 10 to 15. He's still touching the enemy, but `$F3` has only incremented once from 10 to 11. Therefore, he is invulnerable this frame.
 
 If there is a difference between `$F2` and `$F3`, the value in `$F3` will tick up (or down) every frame. By making it so the value changes every two frames (especially when getting hurt), Dizzy will have a longer invulnerability period. 
@@ -386,7 +386,7 @@ This is what the function looks like:
 * `STA $B8`: (same as above)		
 * `JMP $F27D`: Return from this function.
 
-And here's where the function gets called ad `$03F287`:
+And here's where the function gets called at `$03F287`:
   * `JMP $FED0`: Jump to function
 
 The result is as expected; the `$F3` register gets incremented every other frame, thus doubling Dizzy's i-frames.
@@ -399,7 +399,7 @@ How enemy movement and damage was changed is mostly the same for all of them, so
 
 This is also a very easy change, if you know how to use the emulator. Since we know Dizzy's health is tied to `$F2`, by simply adding a breakpoint in the debugger, we can force the game to halt whenever that value gets changed. Once Dizzy walks into an enemy, sure enough the game will pause and point to where `$F2` is getting changed.
 
-The goal is to figure out what *value* got loaded *where* to do the damage done to Dizzy. For example, if the line is `STA $F2` (a.k.a. **ST**ore **A**ccumulator), then we know that we should be looking for loads in the accumulator. It can be tricky to figure out just how we got to that line in the debugger, but by looking at the trace logger, this is made trivial:
+The goal is to figure out what *value* got loaded *where* to do the damage done to Dizzy. For example, if the line is `STA $F2` (a.k.a. **ST**ore **A**ccumulator), then we know that we should be looking for loads to the accumulator. It can be tricky to figure out just how we got to that line in the debugger, but by looking at the trace logger, this is made trivial:
 
 <p align="center">
   <img src="images/enemy_damage_trace.png" alt="Dizzy damage trace"/>
@@ -408,7 +408,7 @@ The goal is to figure out what *value* got loaded *where* to do the damage done 
 
 Using the image above, we can go through the instructions that were executed to get to this breakpoint. The instructions are printed sequentially, so starting from the bottom we see the call to store the Accumulator into `$F2`. Looking up the logs we see another call to change the Accumulator: `ADC $F2` (**AD**d with **C**arry). This call makes sense; add the current value of `$F2` to what already exists in the accumulator. Following up the chain of execution, we arrive at `LDA #07`: Load 7 into the accumulator! This is the damage Dizzy sustained from the spider, and we've found the location where it's getting called (`$92AD`, or `$0052BD` with offsets).
 
-This example was using the patched version of the game; the original value is `#14` - that's 0x14 *not* 14 decimal (0x14 = 16 + 4 => 20 decimal). Full disclosure, I had intended to half the damage from the spiders, but since I spaced and didn't perform the proper conversion, the damage received is about 1/3rd. It's also worth noting that this damage value in the code is shared amongst other enemies, namely the ants and the (not sewer) rats.
+This example was using the (now outdated) patched version of the game; the original value is `#14` - that's 0x14 *not* 14 decimal (0x14 = 16 + 4 => 20 decimal). ~~Full disclosure, I had intended to half the damage from the spiders, but since I spaced and didn't perform the proper conversion, the damage received is about 1/3rd.~~ It has since been fixed to be `#0A`, which is half of `#14`. It's also worth noting that this damage value in the code is shared amongst other enemies, namely the ants and the (not sewer) rats.
 
 Anyways, by performing this operation among other damage sources, I was able to track and change a few of them accordingly.
 

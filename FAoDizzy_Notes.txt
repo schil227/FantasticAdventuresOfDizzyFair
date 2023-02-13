@@ -1,0 +1,741 @@
+=== The Fantastic Adventure of Dizzy - Hacking Notes ===
+
+Goal: 
+- Make the game less tedious
+	-reduce the speed that damage occurs (DONE)
+	-slow down oxygen timer on pirate ship
+- Reduce randomness
+	- Make spiders move at a standard rate, no switching direction half way through (DONE)
+	- The mice in the town are almost as bad as the spiders in the woods. 
+		=> perhaps just reduce their numbers? one or two spiders instead of 3 or 4?
+- Respawnable fruit?
+- Double lives when puzzle solved
+
+Notes:
+$0xF2 and $0xF3 are responsible for Dizzy's health
+	-0xF2 appears to be the "true" health, which jumps to an "incremented" value every few frames
+	-0xF3 is there for the animation, which slowly catches up to the value in 0xF2 (kinda like a burn effect)
+	-Max value is #0x5F, at which point he dies.
+		-Against a spider, you can sustain just 5 hits (jesus the nerve of these developers)
+	-Values are 14, 28, 3C, 50, 5F
+$0x03F264 is the location in code where $0xF2 is getting set, however the code is jumping to this part (whatever's in the accumulator before is used)
+	Jumps found (as in hex file, add #0x10 to address):
+		003F23F
+	
+	Checking for writing #0x14 to the accumulator directly has been fruitless; it must be reading it from a different register that's keeping track of what to use, though I have no idea... holy shit it's probably just reading from F2 elsewhere... 
+	
+$0x0052B7 - when hit, it's checking the existing value in $0xF2, and from there it decides what to load next, often #0x14 into the Acc.
+	-It compares itself with what's in the damage "ticker" in 0xF3, and depending if they're equal it does something
+	-It adds the value of what's in $0xF2 to whatever is in the accumulator, so damage is always incrementing by #0x14
+	-Eventually it finds its way to writing to $0xF2, then it writes 0x64 to 0xF4, which counts down. Pretty sure that's in charge of how long the DAMAGE view stays on screen.
+	
+Hack no. 1: chage the code to load 0x07 instead of 0x14. I dont think this will change much, it'll probably just call the subroutines more
+	-Results were as expected, but the health was a bit more ganular (instead of 5 it was 10 hits (probably), but the hit check occurred twice as often). To slow that down, F3 needs to increment more slowly.
+	
+0x03F27E Contains the branch to see if F2 = F3, and the following code is (I assume) responsible for the incrementing of the ticker
+	0x03F287: INC $F3
+		-> This gets invoked every frame. If we could make it every other frame, or every 3rd frame, we could reduce the speed, thus giving Dizzy some more I-frames and lower damage!
+		
+
+So, what does the change look like?
+	Every frame, instead of calling the increment directly, I would want to jump to a new function.
+	Here's what the function will do:
+	
+	• Increment a counter somewhere in RAM
+	• If the counter is equal to 1 (or 2)
+		• Increment 0xF3
+		• Set counter to 0
+		• Jump back to calling function
+	• else
+		• Jump back to calling function
+		
+	The result is dizzy would have double (or triple) the I frames!
+	
+	IFrame Code:
+	•Picked $0x4040 for i-frame counter
+	•Call at 0x03F287 (F277)
+	
+	EE FF 1F 	// INC $1FFF
+	AD FF 1F   	// LDA $1FFF
+	C9 02 		// CMP #02 (comparing if it's <= 01 for 2x i-frames, to avoid runaway counters)
+	90 07		// BCC 09 (skip 7 instructions when Acc is less that or equal to comparison)
+	E6 F3		// INC $F3 
+	A9 00		// LDA #00
+	8D FF 1F	// STA $1FFF (reset counter)
+	A9 08		// LDA #08 (Hold over from overwrite)		
+	85 B8		// STA $B8 (Hold over from overwrite)		
+	4C 7B F2	// JMP to $F08B (Jump to exit, $0x03F28B)
+	
+	
+	Function will be inserted at 0x03FEE0.
+	
+	fixes: 
+		Cant write to 4040, looking at other blocks
+			-> 050C?
+	
+	This worked! (at least for now. Should come back and double check that that address is not being used for anything special.)
+	
+	-> Turns out it probably is. Found some memory at the very end of the block that appears to be reserved ($1FC0 -> $1FFF), going to write to $1FFF
+		=> Looks like Thats working, hopefully the last time it needs to be changed.
+		
+Enemy damage:
+	Changing the i-frames (above) seems to have effected 
+	• spiders
+	• ants
+	• rats
+	Still need to check:
+
+	
+	
+	
+
+Fire damage:
+ Fire damage (usually from torches) accumulate every frame without checking if F2 = F3 first; so every frame while touching fire damages dizzy without i-frames
+	-> this may be that some damage-types (e.g. drowning) are intended to be cumulative without i-frames. I wonder what introducing i-frames would be like. Occurs at 03F22F	
+		• to introduce iframes, do a jump at 03F22E to a new function that checks if F2 = F3. If so, do the ADC $F2 call. otherwise, skip it. This would also require temporarily storing the Acc. somewhere safe.
+	->the 2 points of damage are coming from $8892
+	====> Reduced to 1 pt damage per frame
+	
+Drowning damage:
+	Interestingly it only does one tick of damage to dizzy ($871A). There are no i-frames so the player must act quickly, but it's kinda fair since the player needs the scubba gear to progress.
+	
+Lava rock damage (from volcano erruption)
+	Does 5 pts of damage (B1DB)
+	
+Water drop (mines)
+	Does 2 pts of damage ($96C1)
+	
+Flying creatures (birds/bats):
+	Does 2 points of damage ($9AD3)
+	=> Reduced to #0x01
+	
+The leprechaun does a whopping !!#0x19!! points of damage holy cow ($AAC7 -> 2AD7)
+	=> Reduced to #0x05
+
+The Triceritops does 0x19 points of damage, ignores i-frames, and can kill you if you go past the star
+	=> Pretty damn harsh beginners trap... maybe I'll reduce it to 0x10
+	
+Spider Movement:
+movement appears to be tied to $04DC and D:
+	$04DC: its height
+	$04DD: Has 3 possible states:
+		00: not moving
+		01: moving down
+		FF: moving up
+		
+	Also seen pairs at:
+	$04E2/3,04E0/1, 04DE/F
+
+	The intermediate values are stored at $2B/$2C for both spiders
+
+	• Getting into the logic, it appears that registers 28 and 2B may be used as well; if they are the same ($9200), the spider appears to stop moving (writing 00 to 2C @ $9206)
+	
+	Starting from the beginning:
+	• 2B is loaded from memory (91E3)
+	• 2C is also written at $91EA, although this appears to be the initial load (e.g. from $04E1)
+	• Other values ($27, $28) are loaded from memory as well (91EC)
+	• 27 is loaded and compared with 2B (the spiders current height)
+		• If 27 is greater or equal to 2B ($91FA) (Gussing 27 is the 'longest string' of the spider's destination) then it stores 27 into 2B (max height) ($9202) and sets the state to stopped ($9206).
+		• The inverted comparison is made between $28 ('shortest string') and $2B. If $2B is less than or equal to $28 ($9200) then $2B is updated to be $28, and the state $2C gets stopped ($9206)
+	
+	• No depending on the current state of the spider, it jumps to 1 of 3 places in the code:
+		○ #00 (still): $9218
+		○ #FF (moving up): $9234
+		○ #01 (moving down): $9244
+
+	• I'm not too concerned with the (still) code, my goal is to disable the switching between FF and 01, instead always going to the maximum ($27,$28) values. Is it as simple as wiping out state changes from those values
+	
+	• When FF, the first thing it does is load the counter ($47) into memory and perform an AND operation against #01 (a 50% chance)
+	• If true, it goes into a subroutine ($923A)
+		=> The Subroutine ($FFBE):
+			• using $09 as a seed, it does a bunch of funky stuff with $0A, ultimately setting $0A to something (and possibly $0B). I think this is mainly used for sudo RNG
+	• After the subroutine, it does a comparison with #03. If the Accumulator is < 3, then it
+	Jumps up, setting the state to 01! ($923F, jumping to $922C)
+		=> Possible fix: change the JMP command set to NOP (EA)
+			○ Actually that's probably the only fix that needs to happen; spiders only switch directions when it going up (#FF -> #01)
+			
+Barrel on Waterfall:
+(Stepping backwards through the code)
+•Would be nice to slow it down when it's at peak height. it's height is loaded into $67 ($BBE3)
+• whatever's in $32 is added to $67 (Add w/ carry to the Acc, which is transferred to Y, which is ultimately assigned to $67) ($BBDE)
+• $32 is set by the accumulator ($BBDA)
+• $32 "bobs" thanks to the logic looking at the counter ($47) ($BBCC). This logic stops getting called after a period of time, and the barrel goes down the falls. 
+	=> If this time period could be extended, that would be ideal
+	=> when $31 has a value of 2, it is in "hover" mode. could be coincidental.
+• Above there's a block that appears to decide what state the waterfall is in ($BBAA).  Several things lead to the $47 read at $BBCC, such as the X increasing:
+	X = 0 : barrel is in the back
+	X = 1 : barrel is closer
+	X = 2 : barrel is in the foreground
+	X = 3 : barrel is falling
+	
+	These values are determined by $050E (see $BBA6), which is a counter exclusively for the barrel. Once it hits #FF, it disappears. So, the barrel may have to speed up when going down to compensate for changing the 'state' timing
+	=> to give a longer period, I could just stretch it out a hair on either side:
+	
+	States:
+	| Appears in the background | falling down in BG | pause | Hover 1 | hover 2 | hover 3| going down|
+	
+	Proposed fix: have Hover 1 occur slightly sooner, and hover 3 last slightly longer, but be careful with hover 3.
+	Change: change CMP #$54 to #$50 at $BBC0
+		-> not a big enough difference; reduced the previous state from #48 to #40, #50 to #45
+	-> Bug: when bumping down the state times, the Y register (responsible for the barrel height) is not getting updated properly. This happens starting on $BB8A, which is using the timer value (currently #85) to derrive it ($BB85).
+		-> it loads the value into memory ($BB85) and performs a right shift >> (result: #42)
+		->that value is transferred into Y
+		-> ($BB8A) that Y is then used as an offset when loading $BC32 (resulting in $BC79)
+			->! there's a bunch of raw data in ram that corresponds to the Y values! these need to be editied to reflect the new Y values (See BC7X in RAM)
+	=> update the ram block starting at $BC72 ($3C82 with offset) from #10 to #94.
+		===> This worked nicely!
+		
+Mice movement:
+	=> this is specific to the mice in the town sewers.
+	==> I think that there's something similar to how the spiders work; they have a box which they are contained - if they hit the edge they must change direction. However the real issue is the switch-backs they do in the middle, which they do a lot. I see two changes to handle these little bastards:
+		1) Disable switchbacks, so they only change direction when they hit the wall
+		~2~) actually yeah that should do it - I was gonna say lower the bottom of the box so it's more clear when they're going to hit Dizzy, but that looks like the result of a switchback.
+	• The block $04DC to $04ED appear to store mice values
+		○ Taking one at random ($04E3) appears to have 8 states, which corresponds to all possible directions (up/l/r/d + diagonals). I'm guessing that determines the direction the mouse is moving.
+	• $04E3 (possibly state) is pulled from memory ($94A0) and stored in address $28 ($94A2)
+	• (A lot of stuff happens that I didn't pay to much attention to
+	• At $94FD the counter $47 gets loaded (for randomness)! It gets AND'd with #03, and branches if it's not 0.
+		○ There appears to be a SR that gets jumpped to $FFBE ($951E), and shortly thereafter ($9527) $28 is used in an ADC call (not sure if that's just a read or if it updates the value at the address)
+			○ The called SR does a bunch of stuff with the "random" addresses, 09, 0A, 0B
+	• After doing a bunch of random shit, (i.e. jumbling the random addresses and using them for the accumulator) It compares the accumulator to #08. If Carry Set (accumulator >= #08) it jumps away... otherwise it writes the random #00->#07 value to $28.
+		-> if this bit of code is not also responsible for writing $28 when hitting walls, the store can be EA'd out (or, the conditional branch can always be true by changing the instruction `CMP #08` to `CMP #00`, thus making the BCS always jump.)
+		
+		=> Fix no.1: change $9531 from `C9 08` to `C9 00`
+		=====> This worked!
+		
+	••• It would still be nice to slow down their speed just a little.
+
+Guillotine:
+	• $04DD is the state (FF = going up, 00 = staying still, 02 = dropping)
+	• Gets stored into $2C
+	• does the usual; branch on state (FF), loads counter ($47) ($9338), does some magic numbers stuff and compares the result to #04. If the accumulator is less than 4, Then it jumps to $9330 ($9345)
+	• The jump loads #02 and stores it in $2C
+	=> to prevent random drops, change the Branch such that it never does the $9330 jump
+	====> ($9341 ($5351 with offsets)) CMP 04 ==>  C9 04 => C9 00
+
+Oxygen:
+	• Stored in address $9E, Slowly ticks down every few frames (good!)
+	• Call to decrement $9E is at $83A3
+	• $47 is loaded at $8395
+		○ Performs AND 3F (0011 1111) against it
+		○ Compares the result against #28
+			=> If equal, it jumps to the DEC command
+		○ It does this 2 more times, for numbers #28 and #14.
+		
+		By altering the numbers, we can drop one of these checks, making the decrement 1/3rd slower!
+		==> keep 3F check, have a second check at #1F, remove last check.
+		====> Noop out $839B (0283AB) => $839F (CMP #28, BEQ $83A5)
+		====> Change $8395 (0283AF) from CMP #14 to CMP #1F
+		
+Bird/Bat Movement:
+	○ Honestly the best fix for this is to just make them move slower. When they dive-bomb dizzy it's almost imposssible to avoid, making them move half-speed would be way more managable
+	• Data is stored for (this particular) bird at 4D6 -> 4DA
+		•$04E9 seems to controll the state of the bird. E.g. changing it to BB makes the bird fly slowly down and to the right
+			○ maybe I should disable switchbacks as well?
+		$04E9 is totally responsible for the direction and speed!
+			•The first part (e.g. A in AB) is responsible for the speed.
+
+			  ○BX moves slowly, CX is really fast
+	• $99D3 stores the state of the brid in $22 (may be different in other cases, since it uses Y)
+	• The state ($22) gets read then it does an AND against #0F, storing the result in $24 ($9A47)
+		=> AND'ing with #0F basically cuts off the first half; so if $22 was #3A, the result would just be #0A
+	• The result of that (#0A in the above example) gets AND'd with #03, and performs a branch if the result is not 0.
+	• $22 is loaded again, then a bunch of right shifts happen ($9A6B). The result is stored in $24.
+		○ ... cold trail
+	• $22 sppears to be mostly written by the value in $FE ($BDAC)
+	• Cant pin-point where the change is happening to $22 since it's getting set every frame. It appears to be iniitalized to #BE by something, but the value from memroy is #EB (in this case.)
+		○ Will try conditional break point to get closer to the logic responsible for changing it: $22 != #EB && $22 != #BE
+	• Loading $22 at (9A45), the value was changed to something different. (Maybe it's getting changed indirectly?)
+	• Looking at the trace log, some sub routines are invoked, including one which appears to be updating the value of $22. One of the SRs invoked if $FFBE, the random numbers one!
+	• a call at $9A26 invokes a jump to  SR $9ADB. This SR invokes $FFBE sr, then assigns the accumulator to $22. 
+		-> I have a hunch that this is the thing causing the switch-backs... Lets see what it does.
+		==> Try disabling the assigning of $22 in subroutine $9ADB.
+		===> At $9ADE (005AEE) STA $22 (85 22) => NOP (EA EA)
+		Didn't work. Bird never changes state, just goes into the corner. Maybe try voiding out the random number sr call?
+		==> NOP the JSR $FFBE (20 BE FF)
+		Didn't work. causes the bird to fly to the top-right of the screen, flipping between states 2C and 1E.
+			○ to wager a guess, every time the bird hits a boundry, a random direction is picked. it did.
+			However, it does look like it solved the switchback issue. Therefore, I bet this SR is getting called in two places: during switchbacks, and when it hits the border.
+		==> search for cases were the SR is getting invoked. Disable the one for switchbacks!
+	• There are several (5?) cases where it jumps directly to $9ADB (Subroutine which randomly picks new direction for bird, updates $22). Starts at $99FE
+		○ I assume that some of these cases are for bounds checking - maybe there's one which uses RNG (counter?)
+	• The 5th case loads $47 and does a conditional branch to the fump subroutine... that's gotta be it!
+	==> NOP the 5th function call at $9A3F ($005A4C) -> JSR $9ADB (20 DB 9A) => EA EA EA
+	Worked! No more switch-backs!
+	
+	
+Extra Lives 
+	• Alter the puzzle game to give dizzy 2 lives per victory
+	• Lives are stored at $9A
+		○ Giving Dizzy an arbitrary number of lives doesn't cause any bugs to occur - it'll simply say "9 lives left" and disply only a few egg indicators. Shouldn't encounter an issue with lives. 
+	• Increment is happening at $D0D1
+	=> need to jump to another function to Inc. twice (or whatevers in Acc.)
+	==> possible location: EC8A (03EC9A)
+	A5 9A		// LDA $9A
+	18			// CLC (clears the carry flag, otherwise it gets added with 02)
+	69 02 		// ADC #02 // add with carry
+	85 9A		// STA $9A
+	38 			// SEC (Sets the carry flag as it was)
+	4C D5 D0	// JMP $D0D5
+	
+	Call ^ at $D0D1 (03D0E1), NOP (EA) the rest ($DOD6)
+	
+	=> Kinda works, I think that noop section is actually being used though. Moving the code elsewhere
+	-> moving to $03FEF9
+	
+	Still doesn't work... well it does, but something else is calling this funciton everytime a new area is loaded or Dizzy dies, and I'm not sure why.
+	
+	Since this $D0D1 SR call seems to have multiple functions, I'll revert it to its original form. Instead, where it's typically getting called once, I'll call it twice! Maybe it works, we'll see.
+	change $880A ($03081A) from JSR $D0D1 to a JSR to another SR, which will contain two JSR's for D0D1:
+	
+	Revert back D0D1:
+	E6 9A
+	A5 9A
+	
+	20 D1 D0	// JSR $D0D1
+	20 D1 D0	// JSR $D0D1
+	60			//RTS
+	
+	==> This worked! no ill-effects either.
+	<== Update: After playtesting I've decided to undo this change, because it deflates a lot of the pressure due to the excessive number of lives. 
+	Instead, I'm going to update the starting value to #03 (so 4 lives). This is done by updating $000021 from "A9 02" to "A9 03"
+	
+Volcano damage is way to high / no IFrames
+	• adds 5 pts damage to $F2 at $B1BD ($0031EB)
+		○ Changing to 2? maybe 3?
+		=> Set to 2
+		
+The One Raindrop
+• Near the very end of the game, when you get the spade and dig up the graveyard, you obtain a trampoline to get out. However in additon to having a terrible user interface, the spot you use it has a water drop **right** in the way. Moving it over in either direction a few pixels would be very useful.
+	○ The raindrop's spawn position is likely set somewhere in RAM; I could possibly alter that value to move it around
+• The raindrop's current height is stored at $04EA.
+• Height values are between #09 and #82
+• I FF'd out a lot of the nearby ram, and the raindrops never moved. If their start/end locations are stored locally, it's a good chance that it's happening there. Looking for values #09 and #82
+	=> no luck
+• Its state must be stored somewhere, which must read the bounding data
+	○ State might be 04EB
+• Anyway it loads a value from memory ($8CCD), value #8 (possibly the upper bound) and compares that to its current hight (temporarly stored in $21) ($9633)
+• If the height is greater than the minimum, it compares it to the lower bound, which in memory is $8CCE
+	○ In ram these values are:
+		Min: $004CDD: #8
+		Max: $004CDE: #82
+	Since the location of the raindrop in the level is extremely high and mostly to the left, the preceding bits D1 01 may be the X and Y coordinates ($004CDB, $004CDC, respecitvely). Compare with another raindrop to confirm.
+	• The smaller raindrop to the left has its height stored at $04E8. Max/Min data (deduced at $005643):
+		Min: $004CD8: #14
+		Max: $004CD9: #6E
+		
+	The memory layout looks like this:
+	
+	... 64 90 01 14 6E 64 D1 01 08 82 64 FE 01 08 56 32 68 01 ...
+	
+	There's a cadence of the 01 showing up, which is probably the state of the raindrop. depending on how this gets broken up, it looks like there are 5 properties associated with raindrops, so it could look something like this:
+	
+	... 64 90 
+	01 14 6E 64 D1 	  <- L.eft
+	01 08 82 64 FE    <- B.astard
+	01 08 56 32 68    <- R.ight
+	01 ...
+
+	Col. 0 is start state, 1 is min, 2 is max, I think 32 is the frequency (smaller for shorter fall height, not sure about the last.  
+	=> gonna expierement with the last to see what it does, maybe with the first too.	
+		=> changed FE to 35: 
+			The R.ight drop has moved! so the data must look more like this:
+			
+... 64 
+	90 01 14 6E 64 <- L.eft
+	D1 01 08 82 64 <- B.astard
+	FE 01 08 56 32 <- R.ight
+	68 01 ...
+
+			I think the actual result moved it leftwards in the level... holy shit is this the X/Y?
+		=> try changing the D1 to move it over a click to the left (#B9)
+			=> this worked, but it still feels in the way
+		==> changing the 01 to a 00 moved it to the other room.
+	==> Ultimately, I "disabled" the raindrop by flipping it's start/end values, and increasing the end value to FE. So it effectively spawns off screen and just loops there. It's beneath the ground, so it cant hurt dizzy, and it also can't be seen.
+	
+Bug: Star-gate 
+-Happened at the very end of the run; on the last star, the message popped up, but the star was uncollected. After collecting the star again, it rolled over to #FF and the gate remained shut.
+==> Solution: alter the logic to check when collecting a star if it's already zero. if so, do not decrement it.
+=> Note: whether the star gate is there or not is based on the star count being 0 or not.
+• $742 = star count
+• $037E28 calls decrement on the star count (CE 42 07)
+• looks like Acc doesn't matter, don't need to store it.
+ => change to a jump which checks if it's zero before decrementing:
+ 
+ AD 42 07 // LDA $0742
+ C9 00	  // CMP #00
+ F0 03    // BEQ 03  (branch if equal)
+ CE 42 07 // DEC $0742 
+ 4C 1B BE // JMP $BE1B
+	
+ Insert at $03FF04
+	
+	The bug is at least reproducable; need to figure out why the last star is not getting collected, despite getting collided with.
+		=> It should be updating the storage property in the $0748->$07B9 block
+	Code to update object perminance is in subroutine $FC8C, invoked at $BE31
+	
+	vvvvvvvvvv Bad data?
+	The star outside dizzy's house is there is 752 if FF, and removed if it becomes FD. After the cutscene plays, it changes a different bit, thus the star remains.
+	○ When it is incorrect, it enters the SR with:
+		Acc: 8C
+		X: 00
+		Y: 1E
+		=> then it loads the contents of $743 into memory, which is F1. X is based off that
+		=> It loads it again, does some stuff and stores it in Y
+	^^^^^^ This data is bogus, could not reproduce. keeping for reference
+	
+	Star outside dizzy's house is actually at 736 - a value of EF means that it goes away
+	=>... it wrote EF, but the star still persisted... what the fuck.
+		Leaving the area and coming back removes it
+	
+	• The value of $736 is read at $BDC4, by calling subroutine $BD94
+		• It is read continuously, suggesting that once the cutscene comes in, that loop is getting disabled.
+	• The code which dictates that SR getting called is concerned with the register values $21, $22, $23. These values are read in from other (local places in memory)
+		○ The value of $22 is loaded into Acc.
+			• If the value of Acc is equal to the value of $99, or #FF, it jumps out to the end of the function (effecitvely doing a return).
+				Otherwise, it calls the $BD94 SR, which loads objects based off the value in $0743 (#14)
+	The values are as follows:
+		$21: A7
+		$22: BE
+		$23: 14 (An Area identifier)
+		$99: 0E
+		
+	After rendering the cutscene:
+		$21: A7
+		$22: BE
+		$23: F1
+		$99: 0E
+	
+	The Area Identifier ($23) is incorrect! It should be 14 (as read from $743)
+	
+	Need to figure out:
+	• What is writing the wrong value (#1F)
+		
+	• Where the room value (#14) is getting set
+		○ There's a very strange sub routine which loops, incrementing the value of $0743 ($0F:FCB6)
+		○ It is a loop with is initially setting the Area Id to zero, and it sets two other addresses: $FD to #83, and $FE to #BE
+			=> $FD/$FE are keeping track of a location in memory; which starts at BE83
+		○ The loop begins: the exit condition is to check if address $FD (Y) => ($BE83) is greater or equal to the value in $99. If true, it returns from the SR
+		○ The contents of the loop do the following:
+			• Increment $0743
+			• Adds 4 to the low-value $FD
+				○ If it rolls over, it increments the high value $FE, continuing the loop.
+		○ After analyzing the (ROM) data at BE57, every 4 addresses the number may increase. I think that this is area data; larger areas are longer and threrefore need more meta information about their inner cells. 14 has two contiguous parts, 17 (ground of yolk folk) has 4, etc.
+			• Reminder: these values are dictated by the value at $99
+		○ This SR is invoked at $03FA86
+		
+	The subroutine which is loading the cutscene erroniously sets $23 to #F1
+		-> $0743 should just be pushed back to $23 after the cutscene is finished... that'd probably do.
+		
+		=> Solution: jump to a new function after cutscene finishes, which writes $0743 back into $23, loads X and A values for "overwritten" calls, jump back.
+		
+		AD 43 07 	// LDA $0743
+		85 23		// STA $23
+		A2 18		// LDX #18
+		A9 00		// LDA #00
+		4C 26 BE	// JMP $BE26
+	
+	make the call to ^ that at $BE22 ($037E32)
+	Write that function at $03FF11 ($FF01).
+		• Note that this will overwrite some existing instructions, however I highly doubt it's being used since it doesn't have any explicit jumps, and locally doesn't make a ton of sense. For record keeping, starting at $03FF16:
+			11 2F ORA ($2F), Y
+			10 2F BPL $FF39
+			24 08 BIT $08
+			4F (Undefined...)
+	
+	This fixed it - star no longer mis-loads.
+	
+Bug: remove invincability glitch	
+	• Setup: take damage, grab a fruit, hit select while it's ticking down.
+		=> This works for things which check for i-frames. $F2 and $F3 are not equal, Dizzy doesn't take damage
+	• $03F282 ($F272) is where the call to decrement $F3 gets called.
+		○ I would guess this is only called while Dizzy is in the "eating" state, but it appears to be controlled by a separate timer. The SR itself is likely $F25E
+	• The SR is jump'd to at $F308, which is called from a different SR at $F2CF (invoked from $D233)
+		○ Reminder: $F4 is responsible for the countdown timer for how long the heal takes
+	• Somewhere shortly after the jump, there's a check to see if $F4 is equal to #00. IF it is ($F304) - if it is, it skips the jump to $F25E, the SR under test (responsible for changing $F3).
+		○ There are also checks against $9D and $9B being #00 - if these get altered that may prevent accessing the function too
+		==> Test: what happens to $F4 when select is pressed?
+		 $F4 jumps to #64 when the select screen is pressed, then drops to #02 - this happens when it was some middling-value.
+		 === When it leaves the select-screen, it's set to #00. the branch check to see if it should go to the $F3 function is then skipped. ===
+	=> Root of the issue is this: $F4, which dictates if it's time to decrement $F3, gets its value changed when entering the select screen. When leaving, the value is set to #00, when it should be $64 (or, whatever it was beforehand)
+	===> The solution would have to be something on the lines of storing $F4 before entering the select view, then reading it back when leaving.
+		• There's some code which is responsible for setting the values (#64 and #00) - two intercept functions could be shimmed in there store/read the value of #F4
+	
+	• When pushing select, the first thing which writes to $F4 is a call to set it to #00 ($03DF77 / $DF67). Convienently they (accidentially?) used 3 bytes to do it, so I can shim in a JMP command there
+		○ While the select screen is running, it continuously stores #02 - not sure if that happens every time)
+	• When leaving, it stores $93 (#00) into $00F4 at $03F0EE ($F0DE). Again it uses the long-form to store $F4, so that can be replaced by another jump.
+		Makes me wonder what $93 has to do with this; hopefully stomping it doesn't cause any real damage
+		  
+	Plan: Store $F4 in $1FFE on the first write (setting the Acc appropreately when finished), and on load, read from $1FFE
+	
+	Called at $DF67 ($03DF77)
+	// Store (Just enough room to write this at $03FF1D / $FF0D)
+	A5 F4 		// LDA $F4
+	8D FE 1F 	// STA $1FFE
+	A9 00		// LDA #00
+	4C 6A DF	// JMP DF6A
+	
+	Called at $F0DE ($03F0EE)
+	// Load (Write at $03FED7 / $FEC7)
+	AD FE 1F	// LDA $1FFE
+	85 F4		// STA $F4
+	4C E1 F0	// JMP $F0E1
+	
+	• So, VERY strangely, now $93 is properly getting the value of $F4 beforehand, meaning my storing/loading commands maybe had somekind of side effect... what the fuck.
+	Fuckin----ay I figured it out:
+		In the original store function, $F4 is set to 0 automatically. Not long after, a bit of code gets invoked to store state before entering the select screen - and guess what? $F4 is read (again with long notation) and stored into $93. In my storage code, I didn't set $F4 back to zero, so $93 was properly keeping track of state. I just solved a bug that's as old as I am.
+	So, I could back out the code I wrote and let $93 do its job, but... eh. Maybe I'll release another, cruler form of FAoDizzy that fixes that lil bug.
+	
+(New) Bug: 
+	After placing the plank near the prince (area 17), throwing the chicken and getting the extra life - when I came back the plank was missing. After leaving the area (reloading), I was able to see it again.
+	-> Trying to reproduce now
+		Reloading the area inbetween throwing the chicken and getting the life, was not able to reproduce it
+		Was able to reproduce it:
+		• grab both elevator key and board
+		• drop both, pick up chicken
+		• leave and come back: board is gone
+			• Doesn't come back until I go up the elevator into area 14
+		
+		Tested it in base game, was (thankfully?) able to reproduce it.
+	• $597 (and the data around it) determines the item and location. when dizzy leaves, those values get wiped
+	• The ID of the board (#02) is sourced from $06EC. Before that there's meta-info about it's location:
+		$06E8: ? (#0F)
+		$06E9: Object's X value (#36)
+		$06EA: Sub-Area Id (#01)
+		$06EB: Object Y value (#9F)
+		$06EC: Object's Id (#02)
+		
+	Values written to the $59X addresses are mostly sourced from the above locations, however there's a mysterious #3C that gets assigned to $598, that doesn't have an obvious source. Likewise, $6E8 gets a value of #0F - again, no clear origin.
+	•Leaving the area and coming back: the $06EX values are not changed, but the $059X values are wiped. Need to see what happens with the elevator key
+		Elevator key data is similar to plank, data is stored at $05F3. nothing obvious different 
+	
+	When leaving the area, I'm seeing $0592 get overwritten without reading the value. And when coming back, the values are not stored at 059X
+	
+	The stored objects ($06EC) are getting called when the area loads. When it's just the plank, its Id gets read at $89CF. When the chicken is also there, it does NOT get read.
+	
+	On Area Load:
+	• $1D points to $05DA in memory ($8967)
+		○ This could be either the area data, or the start of the item data
+		○ There are two values which are compared; $05DA and $05DA + 3 => $05DD
+			$05DA: 0F
+			$05DD: 9E
+		○ My guess is a loop occurs which continues to shift up the Y-offset, untill eventually it comes to the stop point
+	• A comparison is made between $1B + Y (0) to $99 (#0F)
+		○ If the numbers do not match, it skips loading this item
+		○ Otherwise, it increases Y by 3, and loads the $1B + Y(3) offset again
+	• If the value in the Acc ($1B + Y(3)) is zero
+		○ it does not load the object.
+			• This must be a status, indicating that this object has been used up or cleared. Perhaps the object's id is set to #00 when it's been used up.
+		○ Otherwise, it calls the Subroutine 'load object' SR ($899A)
+	• After the SR, $1B is loaded in, and #05 is added to its value. If the Carry flag it set, it increments $1C (standard way to walk up the addresses; $01FF => FF 01 => 00(1) 01 => 00 02 => $0200))
+	• The same thing happens to $1D and $1E as well, except it is incremented by $0A
+	• Around $8992, $45 is incremented and loaded, and if it's not equal to $40 (less than), then it jumps back up to the top, loading #00 into Y ($8965) and loading the next batch of objects.
+		○ The hard-coded #40 implies that it's checking on the order of #40 objects
+	
+	To summarize:
+		For each object in the object bank, check it's area ($99). If the object belongs in this area, and it has not been used up, spawn the object (i.e. store it in local scope) using its meta data.
+		○ Rather curiously, the y-offset +3 points to the vertical data of the object; not the object's Id
+	
+	Theory:
+		Since the Plank is stored way down at $06E8 (the 35th object checked), and there's only so much space to render objects for the area (of #0F), all the object slots get filled up and the plank either never has a chance to get a slot, or it's overwritten in the last spot.
+	Possible solution: 
+		By re-arranging the object order, the Plank can be guarenteed to get a spot. It makes sense to swap it's position with either the weed-killer or star-plant items, since they cannot be accessed until the plank is used (so if they don't render off screen, no big deal)
+	
+	Other objects:
+		Ground elevator key: (right before plank) id: 8
+		Star: stored at $5DA ==> $F726: ($03F736)
+			0F 2F 08 9E 04
+			=> when initially loaded, id (last column) is #63
+			0F 2F 08 9E 63
+			
+		Spray: stored at $6D4 ==> $F91A ($03F92A)
+			0F C2 06 9E 07
+			=> id is #8C
+			0F C2 06 9E 8C
+			
+		Ground Elevator Key: $6E3 ==> $F938 ($03F948)
+			0F 48 05 7F 08 
+			=> id is #41
+			0F 72 05 7E 41
+			
+		Plank: $6E8 ==> $F942 ($03F952)
+			0F 88 00 9F 09 
+			=> id is #5E
+			0E F4 01 A8 5E
+			
+		Should re-arrange by order of priority:
+		Plank => $5DA
+		Ground Elevator Key => $6D4
+		Spray => $6E3
+		Star => $6E8
+		
+	swaping data changed location, but stuff got fucked up; e.g. the plank is now a magical star plant... did I get the right values?
+		=> The object ids undergo changes when the area is loaded. Something to do with $35 ($89A3)
+		
+	As the new area gets loaded, all the objects within the area are assigned ids depending on their item order
+		These id's are unique per area; so depending on the area, the ID corresponds to something in the lookup table (e.g. a 4 over in the other area is a bottle)
+		
+	Only when the sprite is dropped/on deck is the value read, and it's from (around) the 59X section. Depending on the value, it determines what the object looks like
+		=> Note: it does not determine the behavior of the object (e.g. changing the plank into a star and using it at the gap still spawns a plank) - the description is still a plank of wood
+		
+	when doing the load, it looks at the mysterious "id" values, (e.g. #63 for the star), and it gets transferred to the X value. Could this be an indicator to say "hey the object is loaded with this offset?"
+		Therefore, would those values need to be shifted when moving around objects?
+	
+	Need to play around with some data:
+		Flip plank with star
+		Eh, didn't really learn much.
+		
+	• When the objects are initially loaded, their "id" has a weird value, before it gets encoded as something
+		○ E.g. Plank Id is #5C
+	• The value gets yanked from memory  $88AC (reading $D1 + Y offset of 04 => $F946) and placed at $1B + Y offset => $06EC
+	• Shortly thereafter, the Acc. is hard set to #42, wiping out the id.
+		○ The Id now sits in two places; $F946, and $06EC.
+	• Continuing the game, we're in Dizzy's house, and those values are still there.
+	• Upon leaving Dizzy's house, the game will scan through the item list looking for items that match the location identifier (#0E), read it into the on-deck items, and change the id to something closer in scope to order the items with (e.g. 7, 8)
+	• First breakpoint hit is the one updating the value of $06EC to #08, since that was the next available number
+		○ This implies that $06EC wsa never read, and the value does not matter
+	• BUT immediately after, it reads from the "source" of the id in ROM: $F946 and TRANSFERS IT INTO X ($89A7)!!
+		○ This is what that ID means, and why a straight transplant does not work! The X value probably needs to be altered relative to a certain position to properly give the needed offset to the objects! Continue the code to see where X is used
+	• Continuing the code, there's a jump into a SR at $89B4 (sr: $DC27) - this is likely the only place where the X value would be applicable, since if it continues the line after it it gets overridden
+	• Following the trail for a while, the value of X (#5C) gets stored into #2B (also temporailiy in $17) ($DC47). The Y value gets written right next to it ($DC49)))
+		• Note the Y value is written shortly after the X value; for the plank, it's A5
+			○ For compairson, the star has an X value of 63 and Y value of 8B, thus pointing to $8B63, quite a ways away from $A55C
+		• The Y value is sourced from the next address after the X value ($F946 => #5C, $F947 => #A5)
+	• Some work is done with the PPU address (PPU_ADDRESS)
+		○ Maybe this has something to do with the graphics
+	• Now, an address is loaded from $2B (#5C) in conjunction with $2C, which was populated from whatever was in Y at the time ($DC49) => resulting address is $A55C, which has a value of #0F
+	• Rather strangely the address is immediately AND'd with #0F, so no change
+		○ The value (#0F) is stored in $33
+	• 2B,Y is loaded again (loading #0F again)
+		○ It performs 4 logical shifts to the right, making the value 0. Then it adds 1 to the result
+	• the result (#01) is stored at $34
+		○ Now $33/$34 contain 0F 01, which could be interpreted as an address => $010F
+	• The value at $2B (#5C) is incremented => #5D
+	• $2B, Y is loaded again 5D A5 => $A55D, value #00
+		○ A call is made to store the accumulator value #00 into PPU_DATA
+			• The value didn't appear to update, not sure if #00 is a special value or if the Emulator didn't reflect it
+	• $34 gets decremented by 1 (#00), $33 gets decremented by 1 (#0E)
+		○ Then it does some looping work with the PPU data ($DC7F => $DC91) 
+	• $2B gets incremented again, as does $2C
+		
+	==> The problem may be I didn't copy enough data from one source to the other (the Y part was cut):
+		
+		Plank ($03F952): 0E F4 01 A8 5E A5 1D F4 83 00
+		Star ($03F736):  0F 2F 08 9E 63 8B 02 C8 82 03	
+		
+		Concerning the values:
+		0E - Area
+		F4 - X placement
+		01 - Sub area
+		A8 - Y placement
+		5C A5 - Address pointing to sprite data
+		1D - what the object interracts with
+		F4 83 - Item description
+		00 - sub-interaction!
+		1C F8
+		
+		==> Gonna try swapping these values
+		This is very close! only issue is the sprite ordering is messed up for the plank, but otherwise everything else is correct
+		=> also it solves the original issue of the plank getting despawned due to its object order!
+		====> Success! The weird sprite glitch was due to me accidentally altering the sprite id from 5E to 5C (which makes sense)
+			Now the star has the lowest priority, and doesn't get spawned in item-dense areas.
+				==> NOTE: I missed a byte at the end that determines which sub-thing objects interact with. The plank only interracts with one thing so no problem, but the star plant has a value of #03 which needs to be carried over!
+				=> Done.
+				
+• I'd like to do one more modification: swapping the priority between Denzil's elevator key and the ground elevator key. I want to leave the weed-killer alone, since if it doesn't spawn after the bridge that would be (more) confusing than Denzil's elevator key not spawning immediately.
+
+Ground Elevator Key: $6E3 ==> $F938 ($03F948)
+	0F 72 05 7E 41 85 03 44 83 
+	0F 72 05 7E 41 85 03 44 83 00 <- missing interaction id
+	 
+	
+Denzil's Elevator Key: $5F3 ==> $F75C (id) ($03F768 (start of data block))
+	0E 2C 01 88 41 85 03 FF 82	
+	0E 2C 01 88 41 85 03 FF 82 01 <- missing interaction id
+	==> Doesn't quite work; Denzil's key operates the ground elevator
+• Looking through the code, all objects with the elevator key sprite have the same "interaction" id (#03)
+
+02 6E 00 9E 41 85 03 E0 82 03
+0E 2C 01 88 41 85 03 FF 82 01 
+2D D6 02 78 41 85 03 1F 83 02 
+2A 82 00 6E 12 86 01 9B 81 01 (12 86 01 => house keys?)
+0C AA 00 A8 12 86 01 4F 81 02 
+0A 20 02 68 12 86 01 AD 81 03 
+03 3C 00 76
+		
+Scanning the elevator keys, there's definately a 10th parameter that is used for determining which specific thing it interacts with	
+=> After copying the full data set with missing interaction id, it worked
+
+Star data
+0F 2F 08 9E 63 8B 02 C8 82 03
+	
+NEW SKILL UNLOCKED!
+	• The Trace logger can tell you the last N instructions that were called. It can be a simple way to find out what is calling a function - something which is difficult to trace.
+	• X is added to the value before the lookup is performed, Y is added after the lookup.
+		○ e.g. X) for instruction
+			STA ($DB), X              
+		  And X is 10, this would add 10 to DB, making it (FB), then look up the value stored there
+			FB -> 32 40
+		  Storing the value of the accumulator at $4032
+		
+		○ e.g. Y) for instruction
+			STA ($DB), Y
+		  And Y is 10, this would first do the lookup at DB:
+			DB -> 32 57
+		  Finding $5732, then add Y (10) to it, resulting in $5742. Then, the value of the acc. would be stored at $5742.
+	
+Misc. Notes:
+• The RAM block 0x740->0x7B0 is responsible for object permenance; e.g. changing 0x74F from FF to DF will remove the apple outside dizzy's house
+• Counter at 0x47
+• Discovered a deathwarp - If you touch the butterfly then jump over the pirate, you'll get launched in the opposite direction, and dizzy will land on the otherside of town
+• Theres a gold coin under the bubble lift in the sea - I dont think it's necessairy. The pick-ax is necessairy, however, since there is a star down there.
+• You surprisingly do not need anything for the castle, just yields a few stars and the rope-bridge kit
+• The rope is needed for the following:
+	○ Yolkfolk Village: Top near Dozy's (I think)
+	○ Yolkfolk Village: Extra life, right of Denzel's elevator
+	○ Pirate Ship: Getting the Troll Castle's Thing
+	○ Zak's Castle
+
+
+Bridge St.
+    GRAVEYARD-------------W---------|-- Falls
+               |  |        |        |   
+Dock St. ------|-☺|l-l-----|--W-----|-- Ship
+            |  |  | |           |   |     
+            |  |  | |           |   | 
+water      -----$--W--CASTLE---W-------- Yolk Folk
+
+Castle St.
+
+
+ASM Notes:
+On comparision: http://www.6502.org/tutorials/compare_instructions.html
+Optcode table: https://llx.com/Neil/a2/opcodes.html
+General ASM: https://sites.google.com/site/6502asembly/6502-instruction-set
+
+Hints for README:
+• Do the Mincart Minigame first
+• One Minigame is technically optional - but you may have to do it if you take a one-way
+
+// CHANGELOG
+• i-frames were doubled (Can only gain new damage when F2 = F3, the damage ticker F3 now ticks half as fast)
+• Damage from spiders, ants, rats is "halved" (0x07 instead of 0x14)
+• Damage from bats/birds is halved (0x01 instead of 0x02)
+• Damage from fire reduced to 1pt per frame
+• Damage from Triceritops reduced (0x10 instead of 0x19, since it's so early)
+• Damage from leprechaun dramatically reduced from #0x19 to #0x05
+• Stopped spider switch-back, so they go all the way up/down
+	○ JMP 922C => 4C 2C 92 ===> EA EA EA
+• Gave a few more frames to jump on the log
+• Mice movement removed switchbacks
+• Bird movement removed switchbacks
+• Guillotine movement removed switchbacks
+• more Oxygen
+• ~~double lives~~ backed out, start with 1 extra life.
+• reduced lava rock damage (5pts -> 2pts / frame, no iframes)
+• removed a particularly tedious raindrop in the graveyard cavern
+• Updated storage location for I-Frames to $1FFF
+• Added a zero-check if the is accidently another star left over after cutscene plays, it doesn't fuck the player over at the very end (Was able to reproduce in base game holy shit how awful)
+• Also fixed it so that object permenance is updated immediately, so after a star is collected it should always disappear
+• Removing cheat-i-frames
+• Changed object loading priority
