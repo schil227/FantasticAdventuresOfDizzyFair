@@ -64,7 +64,7 @@ This README documents how to install the patch to your copy of FAoD, as well as 
         * [Increasing Oxygen For Bubble Mini-game](#tech_oxygen)
         * [Removing The Tedious Raindrop](#tech_raindrop)
     1. [How Bugs Were Fixed](#how_bugs)
-        *  [Removing Invincibility Bug](#tech_bug_invincibility)
+        * [Removing Invincibility Bug](#tech_bug_invincibility)
         * [Fixing The Star Bug](#tech_bug_star)
         * [Fixing The Object Loading Order](#tech_bug_objects)
 1. [Conclusion](#conclusion)
@@ -292,7 +292,7 @@ At the very end of the game, one of the last items you get is a trampoline - and
 
  In addition to enhancements, the patch also features some bug-fixes.
 
- **Invincibility Glitch: Removed** <a id="tech_bug_invincibility"></a>
+ **Invincibility Glitch: Removed** <a id="desc_bug_invincibility"></a>
  <font size="2"> [[Tech]](#tech_bug_invincibility) </font>
 
  | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
@@ -433,7 +433,7 @@ There are two values that the spider needs to keep track of: its height, and cur
  
  To summarize, the goal is to remove the red arrow in the flowchart above that lets the spider switch state while moving upwards.
 
- The random number generation in FAoD appears to have a few sources, but one common one is the frame counter that exists at `$47`. Every frame this address counts up one, and once it reaches the maximum value (`#FF`) it resets back to zero. When the spider is in the state `$FF`, it loads the counter (instruction at `$9234`) and does and `AND #01` instruction, which has a %50 chance of being true (meaning the counter byte has a 1 in the right most bit: `0000 0001`). If it is true, then further RNG calculations are performed and a value is stored in the accumulator. If that value happens to be less than #03, then at line `$9241` it jumps to `$922C`, which sets the state to `#01`. This instruction to jump is the "red path" that needs to be removed.
+ The random number generation in FAoD appears to have a few sources, but one common one is the frame counter that exists at `$47`. Every frame this address counts up one, and once it reaches the maximum value (`#FF`) it resets back to zero. When the spider is in the state `$FF`, it loads the counter (instruction at `$9234`) and does and `AND #01` instruction, which has a %50 chance of being true (meaning the counter byte has a 1 in the right most bit: `0000 0001`). If it is true, then further RNG calculations are performed and the result is stored in the accumulator. If that value happens to be less than #03, then at line `$9241` it jumps to `$922C`, which sets the state to `#01`. This instruction to jump is the "red path" that needs to be removed.
 
 
  | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
@@ -441,7 +441,7 @@ There are two values that the spider needs to keep track of: its height, and cur
 | <img src="images/spider_mvmt_function.png" style="width:342px" /><br/>|<img src="images/spider_mvmt_function_fix.png" style="width:342px" /> |
 | <p style="text-align: center;"> Jumps to sub routine `$922C` </p> | <p style="text-align: center;"> Removes jump to sub routine `$922C` </p>|
  
-Once the code is understood, the solution is fairly simple. There are different ways of avoiding the sub routine call, such as making it so the branch that typically skips over it always be taken (e.g. changing `CMP #03` to `CMP #00`). However I just went ahead and replaced the `JMP $922C` command with `NOP` (**N**o **OP**eration). Note that a jump instruction is 3 bytes long `4C 2C 92`, so those bytes were overwritten as 3 seperate `NOP` instructions (`EA`).
+Once the code is understood, the solution is fairly simple. There are different ways of avoiding the sub routine call, such as making it so the branch that typically skips over it always be taken (e.g. changing `CMP #03` to `CMP #00`). However I just went ahead and replaced the `JMP $922C` command with `NOP` (**N**o **OP**eration). Note that a jump instruction is 3 bytes long `4C 2C 92`, so those bytes were overwritten as 3 separate `NOP` instructions (`EA`).
 
 And that's all it takes to fix, what is in my opinion, one of the worst things about the game.
 
@@ -449,7 +449,7 @@ The logic controlling the Guillotine is practically identical, and the solution 
  1. They hit the border of their allowed area of movement (a "wall")
  1. RNG dictates they should change direction
 
- The first case makes sense; if they bump into the ceiling/ground, or they go as far as they're allowed to on the left or right, they should randomly change direction. The second option is the one we would want to disable. It's similar in format; using the counter (`$47`), if it meets some condition then it uses further RNG to determine which direction and at what speed to move. By disabling the jump which change its velocity, we can eliminate the second condition. The result is, this type of enemy only changes direction when they hit a wall
+ The first case makes sense; if they bump into the ceiling/ground, or they go as far as they're allowed to on the left or right, they should randomly change direction. The second option is the one we would want to disable. It's similar in format; using the counter (`$47`), if it meets some condition then it uses further RNG to determine which direction and at what speed to move. By disabling the jump which change its velocity, we can eliminate the second condition. The result is, this type of enemy only changes direction when they hit a wall.
 
  ### How The Environment Was Changed <a id="how_environment"></a> 
  In addition to changing Dizzy and Enemies, parts of the world were (slightly) changed.
@@ -469,7 +469,7 @@ This has always been a particularly difficult jump, one which I thought could be
   1. The barrel is "hovering", and can be jumped on (this goes on for two more states)
   1. The barrel descends in the foreground
 
-  All these states are driven by a counter located at `$050E`. The counter ticks up every frame, and a `LSR` (**L**ogical **S**hift **R**ight)is performed, which halves the value. The result from that, referred to as state_counter, is used to drive the state. The reason why the `$050E` counter is halved is because it causes the state_counter to sustain for two frames; e.g. (`LSR #82` => `#41`, `LSR #83` => `#41`, `LSR #84` => `#42`, `LSR #85` => `#42`, etc.). Doing it this way will save data (which we'll get to in a second).
+  All these states are driven by a counter located at `$050E`. The counter ticks up every frame, and a `LSR` (**L**ogical **S**hift **R**ight)is performed, which halves the value. The result from that, referred to as state_counter, is used to drive the state. The reason why the `$050E` counter is halved is because it causes the state_counter to sustain for two frames; e.g. (`LSR #82` => `#41`, `LSR #83` => `#41`, `LSR #84` => `#42`, `LSR #85` => `#42`, etc.). Doing it this way will save some data (which we'll get to in a second).
 
  | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
@@ -485,9 +485,9 @@ Above is the code which determines the state of the barrel. Without going line b
   * After this the format of the code changes a little, but in essence it's the same. A check is made to see if state_counter is greater than `#6C` (at `$BBBA`), then if its less than `#54` (`$BBC0`), and then if it's less than `#60`.
     * All the state values between `#48` (`#40` Fair Version) and `#6C` have the barrel at the top of the falls, ready to be jumped on. After `#6C` the barrel drops down the falls.
 
-  As outlined, the solution is rather straightforward; when the state_counter is between `#30` and `#48`, the barrel is gone, and then the next chunk from `#48` to `#6C` is the target state that we want to "elongate". By shortening the `#30` to `#48` range to `#30` to `#40`, we then extend the range of time when the barrel is ready to be jumped on to `#40` to `#6C`. It may not seem like much, but again each count of the state_counter is worth two frames; thus 16 frames are gained for Dizzy to jump onto the barrel; over half a second!
+  As outlined, the solution is rather straightforward; when the state_counter is between `#30` and `#48`, the barrel is gone, and then the next chunk from `#48` to `#6C` is the target state that we want to extend. By shortening the `#30` to `#48` range to `#30` to `#40`, we then extend the range of time when the barrel is ready to be jumped on to `#40` to `#6C`. It may not seem like much, but again each count of the state_counter is worth two frames; thus 16 frames are gained for Dizzy to jump onto the barrel; over half a second!
 
-  The other thing to bring up is that there is a table of values which correspond to barrel height. For every tick of the state_counter, there exists a vertical value that represents where the barrel should be. This is underlined in the tables below:
+  The other thing to bring up is that there is a table of values which correspond to barrel height. For every tick of the state_counter, there exists a value that represents the current height of the barrel. This is underlined in the tables below:
 
  | <p style="text-align: center;">Base Game</p> | <p style="text-align: center;">Fair Edition </p> |
 |---|---|
@@ -510,14 +510,14 @@ This change was fairly simple. Dizzy's oxygen meter starts at a high number and 
 
 The counter `$47` is used as a timer source, and an `AND #3F` is performed against it (`0011 1111`), so the result has a range between `#00` and `#3F`. The Base version has three checks for this value (almost) evenly spread out in-between. if the value is `#3F` (`$8397`), if the value is equal to `#28` (`$839B`), or if the value is equal to `#14` (`$839F`), then the code executes line `$83A3`: `DEC $9E` (**DEC**rement `$9E`). So basically, on a given value of the timer, `$9E` has three chances to be decremented.
 
-The fix is as simple as reducing the number of chances. In the modified Fair Version of the game, there are only two checks; the inital one to see if the value is equal to `#3F`, and a second one that occurs at `$1F` (half of `#3F`). The other chance is simply `NOP`'d away. 
+The fix is as simple as reducing the number of chances. In the modified Fair Version of the game, there are only two checks; the initial one to see if the value is equal to `#3F`, and a second one that occurs at `$1F` (half of `#3F`). The other chance is simply `NOP`'d away. 
 
 The result is: for a given value of the counter, it only has two chances instead of three - meaning in the Fair Version the value decreases at a rate 2/3rds of the original.
 
 **Removing The Tedious Raindrop** <a id="tech_raindrop"></a>
 <font size="2"> [[Desc]](#desc_raindrop) </font>
 
-For such a simple change, this one took quite a while to figure out. There are tons of raindrops in this particular area, so isolating which values corresponded to which raindrop was a bit tedious. Once I was able to figure out part of it (my notes say that it's current height was stored at `$04EA` in RAM), I was able to trace back to where that value was initially loaded from in ROM (**R**ead **O**nly **M**emory). The ROM data contained all the hardcoded values for each of raindrops; e.g. their start and end location, how frequently they should drop, etc. In memory, it looked like this:
+For such a simple change, this one took quite a while to figure out. There are tons of raindrops in this particular area, so isolating which values corresponded to what raindrop was a bit tedious. Once I was able to figure out part of it (my notes say that it's current height was stored at `$04EA` in RAM), I was able to trace back to where that value was initially loaded from in ROM (**R**ead **O**nly **M**emory). The ROM data contained all the hardcoded values for each of raindrops; e.g. their start and end location, how frequently they should drop, etc. In memory, it looked like this:
 
 `... 64 90 01 14 6E 64 D1 01 08 82 64 FE 01 08 56 32 68 01 ...`
 
@@ -557,11 +557,11 @@ However, there were a few that I felt inspired to fix.
 
 Since beating the game originally all but relied on using this glitch, a good measure of this patch would be to remove it completely.
 
-In the Increasing I-Frames section, we already discussed `$F2` (Dizzy's Heath) and `$F3` (A counter which slowly goes to whatever's in `$F2`). Now we introduce `$F4`: `$F4` is a timer which governs how long `$F3` will tick up or down for, while simultaneously getting used to display the Damage meter. Typically `$F4` has more than enough time for `$F3` to adjust to `$F2`'s value; however if `$F4` reaches zero before this happens, then `$F3` will not equal `$F2`. If `$F3` and `$F2` are not equal, the game thinks that Dizzy has i-frames, and he will not take damage from several types of enemies, such as the spiders, ants, rats.
+In the [Increasing I-Frames](#tech_dizzy_i_frames) section, we already discussed `$F2` (Dizzy's Heath) and `$F3` (A counter which slowly goes to whatever's in `$F2`). Now we introduce `$F4`: `$F4` is a timer which governs how long `$F3` will tick up or down for, while simultaneously getting used to display the Damage meter. Typically `$F4` has more than enough time for `$F3` to adjust to `$F2`'s value; however if `$F4` reaches zero before this happens, then `$F3` will not equal `$F2`. If `$F3` and `$F2` are not equal, the game thinks that Dizzy has i-frames, and he will not take damage from several types of enemies, such as the spiders, ants, rats.
 
 So what causes the value of `$F4` to not be enough time? There inlays the glitch. When the player presses select, another screen gets rendered, showing off Dizzy's inventory, item and area descriptions, etc. However to display that screen, the game needs to use many addresses in memory. This is roughly what it does:
-1. Stores the game state of things elsewhere in RAM
-2. Loads the select screen
+1. Stores the game state elsewhere in RAM
+2. Loads the select screen (overwriting many values where the game state was)
   * Stays here until the player leaves
 3. Loads the state from elsewhere in RAM
   * Game state is loaded, continue
@@ -570,7 +570,7 @@ One of the values it keeps track of is `$F4`, however something gets mixed up: a
 
 I didn't look much further into it at this point, since I saw an opportunity to immediately fix the issue; I wrote a simple function that stored `$F4` way in the back of RAM at `$1FFE`. This function would get executed at step **1**. Then during step **3**, I had another function which would load `$1FFE` and stick it into `$F4`. This was enough to remove the bug.
 
-However, there's a little more to this bugfix: after I had implemented my solution, I noticed that `$93` was suddenly had the correct value! Why was this?
+However, there's a little more to this bugfix: after I had implemented my solution, I noticed that `$93` suddenly had the correct value! Why was this?
 
 Here is the original code of the bug:
 
@@ -578,9 +578,9 @@ Here is the original code of the bug:
   <img src="images/invincibility_glitch_code.png" alt="invincibility glitch code"/> </br>
 </p>
 
-I had changed line `$03DF77` (a.k.a. `$DF67`) from `STA $00F4` to a `JMP` call to my new function; which meant that `$00F4` (a.k.a. `$F4`) was no longer getting set to `#00` from the accumulator. Not long after this code gets called, a different function gets invoked: this one stores the value of `$F4` into `$93`! So really, all I had to do was remove that erroneous assigment of `#00` to `$F4`. However after already making my change, I didn't feel like undoing it, so decided to say "eh" and left it in there. 
+I had changed line `$03DF77` (a.k.a. `$DF67`) from `STA $00F4` to a `JMP` call to my new function; which meant that `$00F4` (a.k.a. `$F4`) was no longer getting set to `#00` from the accumulator. Not long after this code gets called, a different function gets invoked: this one stores the value of `$F4` into `$93`! So really, all I had to do was remove that erroneous assignment of `#00` to `$F4`. However after already making my change, I didn't feel like undoing it, so decided to say "eh" and left it in there. 
 
-It's strange that they used the long form of storage (`8D F4 00` => `STA $00F4`) instead of the more concise version (`85 F4` => `STA $F4`); this was at a time where space really mattered, and was relatively limited. Even I, a novice assembly programmer, know it's better to use the short form. I'm not one to speculate, but it sure is fun: here are some of my theories as to why this ended up the way it did:
+It's strange that they used the long form of storage (`8D F4 00` => `STA $00F4`) instead of the more concise version (`85 F4` => `STA $F4`). This code was written at a time where space really mattered, and was relatively limited. Even I, a novice assembly programmer, know it's better to use the short form. I'm not one to speculate, but it sure is fun: here are some of my theories as to why this ended up the way it did:
   1. The intern wrote this piece of code, and the bug it produced was obscure enough that nobody caught it
   1. Perhaps it was a late code change, so having 95% of the game finished, they needed to make a quick and dirty fix to resolve some bug (but ended up producing another)
   1. (The hottest take) the game was too difficult, so they introduced this obscure glitch to make testing it easier
@@ -594,15 +594,15 @@ Anyway with this bug fixed, Dizzy now remains the fragile, pathetic egg he is. D
 
 Of all the bug fixes I think this one is most important, as it could easily soft-lock your game at the very, very end.
 
-As it turns out, this bug is relatively similar to the previous. When Dizzy collects the 100th star, a new screen is loaded explaining that the star gate is down and Dizzy can now enter Zak's tower. When it does this, it stores game-state values in RAM, displays the screen, then loads those values back. After this cut-scene, *sometimes* the star would still be there, ready to be collected.
+As it turns out, this bug is relatively similar to the previous. When Dizzy collects the 100th star, a new screen is loaded explaining that the star gate is down and Dizzy can now enter Zak's tower. When it does this, it stores game-state values elsewhere in RAM, displays the screen, then loads those values back. After this cut-scene, *sometimes* the star would still be there, ready to be collected.
 
-Now the star gate is up when the value is *not* zero, as opposed to just greater than zero. So if Dizzy collects that star again, the value rolls over from `#00` to `#FF`, and the star gate is up permanently. My first fix was address this problem:
+Now, the star gate is enabled when the value is *not* zero. So if Dizzy collects that star again, the value rolls over from `#00` to `#FF`, and the star gate is up permanently. My first fix was to stop the value from rolling over:
 
  <p align="center">
   <img src="images/star_gate_guard.png" alt="star gate guard-clause code"/> </br>
 </p>
 
-The address `$0742` contains the number of stars that need to be collected. Whenever Dizzy collects a star, the value of that address decreases by one. Since there was no guard clause to check for zero first, the value always decremented, hence the issue. The code above now first checks if `$0742` is already zero - if it is, it skips the `DEC $0742` instruction, keeping the value at zero, and the star gate open.
+The address `$0742` contains the number of stars that need to be collected. Whenever Dizzy collects a star, the value of that address decreases by one. Since there was no guard clause to check for zero first, the value always decremented, hence the issue. The code above now first checks if `$0742` is already zero - if it is, it skips the `DEC $0742` instruction, keeping the value at zero, and the star gate disabled.
 
 The above fix works, but it would be much nicer if the star didn't appear at all. I went on to fix the root of the issue:
 
@@ -613,7 +613,7 @@ The above fix works, but it would be much nicer if the star didn't appear at all
 **Fixing The Object Loading Order** <a id="tech_bug_objects"></a>
 <font size="2"> [[Desc]](#desc_bug_objects) </font>
 
-This was a rather obtuse bug that I found on my penultimate play-through. Basically for a given area (e.g. the YolkFolk Forrest Floor) there are several "rooms" connected horizontally. Amongst all these rooms, there is a limited number of "slots" to store objects (objects in this case being the white items he can pick up, not including stars or fruit). If Dizzy brings in objects from a different area and drops them on the ground, they are rendered as sitting on the ground. However, if too many objects are dropped in a given area, on *some* of those objects will disappear.
+This was a rather obtuse bug that I found on my penultimate play-through. Basically for a given area (e.g. the YolkFolk Forrest Floor) there are several "rooms" connected horizontally. Amongst all these rooms, there is a limited number of "slots" to store objects (objects in this case being the white items he can pick up, not including stars or fruit). If Dizzy brings in objects from a different area and drops them on the ground, they are rendered as sitting on the ground. However, if too many objects are dropped in a given area, *some* of those objects will disappear.
 
 The scenario which I encountered was I had dropped the Plank and Denzil's Elevator Key (two items near Dizzy's house in a different area) on the ground by the Chicken. When I left and came back, the Plank was inexplicably gone. This is what was happening behind the scenes:
 1. I reloaded the area by exiting and re-entering
@@ -653,7 +653,7 @@ The underlined data correspond to the following objects:
  * Green: The Ground Elevator Key
  * Red: The Plank
 
-As you can see, the Plank and Ground Elevator Key objects are stored very far down, especially compared to the Star Plant and Denzil's Elevator Key. Despite having a (defacto) lower priority, the Plank and Ground Elevator Key objects are more important, using those objects are pre-requisites to using the higher-priority objects (the Star Plant, Denzil's Elevator Key). 
+As you can see, the Plank and Ground Elevator Key objects are stored very far down, especially compared to the Star Plant and Denzil's Elevator Key. Despite having a (defacto) lower priority, the Plank and Ground Elevator Key objects are actually more important: using those objects are pre-requisites to using the "higher-priority" objects (the Star Plant, Denzil's Elevator Key). 
 
 The solution is simple enough; swap the objects such that higher-priority objects come before lower-priority objects:
 
@@ -666,14 +666,14 @@ Re-arranging the object order has the desired outcome; all objects render proper
 
 ### Conclusion <a id="conclusion"></a> 
  <p align="center">
-  <img src="images/FAoDizzy_Fair-Zaks.bmp" alt="guard glitch"/> </br>
+  <img src="images/FAoDizzy_Fair-Zaks.bmp" alt="Zaks and Daisy"/> </br>
 </p>
 
 Fantastic Adventures of Dizzy for NES is probably one of the hardest games I've ever played, and was always a game that I felt I could never see to the end. Of course, beating this patch would never equal the accomplishment of beating the unmodified version, but *holy pygmy cow* is the patch a better game.
 
 Over the course of making the changes for this patch, I play-tested the game to the end 5 times. Even after writing this entire damn README, I still made a last-minute change to the spider damage (accidentally set it to `#07`, was supposed to be `#0A`), which required replaying the game again to make sure that didn't introduce any unintended behavior. The problem with testing FAoD is it becomes a moving target - I'm not the average player of the game; I'm probably like... idk top 100 FAoD players in the world, currently? I know all the puzzles, where all the items are, many efficiencies, etc. - the point being, it's hard for me to say what is appropriately difficult. 
 
-This was less of an issue the last time I did this with [Journey to Silius](https://github.com/schil227/JourneyToSiliusFair) - I had only one change which I had to tweak, and when I was *just barely* able to beat the game I knew it was perfect. But, not even a month after I released the patch, I was able to play and beat the *original* game, not just the patch, due to the encyclopedic knowledge I gained while play-testing it. By comparison, in my most recent play-through of FAoD, I only died twice and had a surplus of lives at the end. That said, I would like to definitely error on the side of caution and give the player more grace - otherwise you end up with a Ghosts-n-Goblins situation (where the developers got so good at the game, they kept increasing the difficultly to compensate - or so I've heard).
+This was less of an issue the last time I did this with [Journey to Silius](https://github.com/schil227/JourneyToSiliusFair) - I had only one change which I had to tweak, and when I was *just barely* able to beat the game I knew it was perfect. But, not even a month after I released the patch, I was able to play and beat the *original* game, not just the patch, due to the encyclopedic knowledge I gained while play-testing it. By comparison, in my most recent play-through of FAoD, I only died twice and had a surplus of lives at the end. That being said, I would like to definitely error on the side of caution and give the player more grace - otherwise you end up with a Ghosts-n-Goblins situation (where the developers got so good at the game, they kept increasing the difficultly to compensate - or so I've heard).
 Perhaps I will have to give it a year and play-test it again; give myself time to forget everything and come into it fresh. All that said, the first time I completed a play-through I felt that jolt of excitement and feeling of accomplishment, so at least that was on point.
 
-I stand by the changes to this hack. It was a long, but fun undertaking that deepened my knowledge of Assembly a little, and I'm proud of how the game turned out. If one of the 8 people in the world who care about FAoD use this patch and finally beat the game after so many years of trying, it'll all be worth it.
+I stand by the changes to this hack. It was a long, but fun undertaking that deepened my knowledge of Assembly a little, and I'm proud of how the game turned out. If one of the... 8 people in the world who care about FAoD use this patch to finally beat the game after so many years of trying, it'll all be worth it.
